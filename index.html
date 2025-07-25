@@ -38,14 +38,14 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
         .chart-container {
             background: #ffffff;
             color: #333;
             border-radius: 10px;
             padding: 1.5rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            min-height: 450px;
+            min-height: 500px; /* Aumentado para mejor visualización */
             height: auto;
             overflow: visible;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -58,8 +58,8 @@
         .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
         .axis { font-size: 12px; }
         .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
-        .axis .tick text { fill: #333; } /* Estilo para texto de ejes */
-        .dot { transition: opacity 0.3s, transform 0.3s; }
+        .axis .tick text { fill: #333; }
+        .dot { transition: opacity 0.3s, transform 0.3s, r 0.3s; }
         .line { fill: none; stroke-width: 1.5px; transition: stroke-opacity 0.3s; }
         
         /* --- Controles e Interactividad --- */
@@ -69,7 +69,7 @@
         .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
         
         /* Controles para gráfica personalizable */
-        .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
         .custom-chart-controls select {
             padding: 5px 8px;
@@ -139,7 +139,7 @@
             <!-- ========= NUEVA SECCIÓN PARA GRÁFICA PERSONALIZABLE ========= -->
             <div class="section">
                 <h2 class="section-title">Análisis Personalizado</h2>
-                <div class="charts-grid" style="grid-template-columns: 1fr;"> <!-- Forzar una sola columna para esta sección -->
+                <div class="charts-grid" style="grid-template-columns: 1fr;">
                     <div class="chart-container">
                         <div class="chart-title">Gráfica Personalizable</div>
                         <p class="chart-description">Selecciona dos variables numéricas para explorar su relación.</p>
@@ -186,25 +186,15 @@
     let processedData = [];
     let activeSelection = [];
     
-    const margin = { top: 50, right: 30, bottom: 60, left: 70 }; // Aumentado top y bottom para etiquetas
+    const margin = { top: 60, right: 30, bottom: 60, left: 70 };
     const tooltip = d3.select(".tooltip");
     const colorScale = d3.scaleOrdinal(d3.schemeAccent);
     let activeStackedBarFilter = null;
     let hiddenGroups = new Set();
+    const y = {}; // Global para reinicio de coordenadas paralelas
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!  CONFIGURACIÓN CRÍTICA  !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    //
-    // 1. RUTA DEL ARCHIVO CSV:
-    //    Debe coincidir EXACTAMENTE con el nombre de tu archivo en el repositorio de GitHub.
-    //    GitHub es sensible a mayúsculas: "Salary_Data.csv" NO es lo mismo que "salary_data.csv".
-    //    Usar "./" es una buena práctica para rutas relativas.
-    //
     const csvFilePath = "./Salary_Data.csv"; 
 
-    // 2. MAPEO DE COLUMNAS:
-    //    Ajusta los valores (el texto a la derecha) para que coincidan EXACTAMENTE
-    //    con los encabezados de las columnas en tu archivo CSV.
-    //
     const columnMapping = {
         age: "Age",
         gender: "Gender",
@@ -213,16 +203,12 @@
         experience: "Years of Experience",
         salary: "Salary"
     };
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     // =================================================================================
     // --- CARGA DE DATOS E INICIALIZACIÓN ---
     // =================================================================================
     document.addEventListener('DOMContentLoaded', () => { loadData(); });
 
-    /**
-     * Carga el archivo CSV y maneja el éxito o el fracaso.
-     */
     function loadData() {
         d3.csv(csvFilePath).then(data => {
             processRawData(data);
@@ -233,20 +219,23 @@
         });
     }
 
-    /**
-     * Procesa los datos crudos del CSV a un formato limpio y utilizable.
-     * @param {Array} rawData - Datos directamente desde d3.csv.
-     */
     function processRawData(rawData) {
-        processedData = rawData.map((row, i) => ({
-            id: `d-${i}`,
-            age: +row[columnMapping.age] || 0,
-            gender: row[columnMapping.gender] || 'N/A',
-            education: row[columnMapping.education] || 'N/A',
-            jobTitle: row[columnMapping.jobTitle] || 'N/A',
-            yearsExperience: +row[columnMapping.experience] || 0,
-            salary: +row[columnMapping.salary] || 0
-        })).filter(d => d.salary > 0 && d.gender !== 'N/A' && d.jobTitle);
+        processedData = rawData.map((row, i) => {
+            const d = {
+                id: `d-${i}`,
+                age: +row[columnMapping.age],
+                gender: row[columnMapping.gender],
+                education: row[columnMapping.education],
+                jobTitle: row[columnMapping.jobTitle],
+                yearsExperience: +row[columnMapping.experience],
+                salary: +row[columnMapping.salary]
+            };
+            // Validar que los datos sean numéricos y no NaN
+            if (isNaN(d.age) || isNaN(d.yearsExperience) || isNaN(d.salary) || !d.gender || !d.jobTitle) {
+                return null;
+            }
+            return d;
+        }).filter(d => d !== null && d.salary > 0);
         
         if (processedData.length === 0) {
             throw new Error("No se procesaron datos válidos. Revisa el mapeo de columnas y el contenido del CSV.");
@@ -255,19 +244,23 @@
         activeSelection = [...processedData];
     }
 
-    /**
-     * Configura el dashboard una vez que los datos están listos.
-     */
     function initializeDashboard() {
         d3.select("#loading").style("display", "none");
         d3.select("#content").style("display", "block");
         
         d3.select("#resetButton").on("click", () => {
+            // Limpiar todos los filtros visuales y lógicos
             d3.select("#scatter-experience .brush").call(d3.brush().move, null);
-            d3.selectAll("#parallel-coordinates .brush").each(function(d) { d3.select(this).call(y[d].brush.move, null); });
+            d3.selectAll("#parallel-coordinates .brush").each(function(d) {
+                if (y[d] && y[d].brush) {
+                    d3.select(this).call(y[d].brush.move, null);
+                }
+            });
             activeStackedBarFilter = null;
             hiddenGroups.clear();
-            updateAllCharts(processedData);
+            
+            // Restaurar selección y actualizar todos los gráficos
+            updateAllCharts(processedData, true); // `true` para redibujar completamente
         });
         
         createAllVisualizations();
@@ -280,11 +273,7 @@
     function showTooltip(event, text) { tooltip.transition().duration(200).style("opacity", .9); tooltip.html(text).style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 28}px`); }
     function hideTooltip() { tooltip.transition().duration(500).style("opacity", 0); }
     
-    /**
-     * Función para ajustar texto en ejes (para etiquetas largas).
-     * @param {d3.Selection} text - Selección de D3 de los elementos de texto.
-     * @param {number} width - Ancho máximo permitido para el texto.
-     */
+    // FUNCIÓN PARA AJUSTAR TEXTO EN EJES
     function wrap(text, width) {
         text.each(function() {
             var text = d3.select(this),
@@ -293,9 +282,10 @@
                 line = [],
                 lineNumber = 0,
                 lineHeight = 1.1, // ems
+                x = text.attr("x"),
                 y = text.attr("y"),
-                dy = parseFloat(text.attr("dy") || 0),
-                tspan = text.text(null).append("tspan").attr("x", -10).attr("y", y).attr("dy", dy + "em");
+                dy = parseFloat(text.attr("dy")) || 0,
+                tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
             while (word = words.pop()) {
                 line.push(word);
                 tspan.text(line.join(" "));
@@ -303,7 +293,7 @@
                     line.pop();
                     tspan.text(line.join(" "));
                     line = [word];
-                    tspan = text.append("tspan").attr("x", -10).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                    tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
                 }
             }
         });
@@ -312,12 +302,16 @@
     // =================================================================================
     // --- LÓGICA PRINCIPAL DE GRÁFICOS ---
     // =================================================================================
-    function updateAllCharts(data, preserveHiddenGroups = false) {
+    function updateAllCharts(data, fullReset = false) {
         activeSelection = data;
-        updateScatterExperience(preserveHiddenGroups);
+        if (fullReset) {
+            // Si es un reinicio completo, se actualiza con los datos originales
+            activeSelection = processedData;
+        }
+        updateScatterExperience();
         updateStackedBarChart();
         updateParallelCoordinates();
-        updateCustomizableChart(); // Asegurarse que la nueva gráfica también se actualice
+        updateCustomizableChart(); // Actualizar la nueva gráfica
     }
 
     function createAllVisualizations() {
@@ -332,83 +326,127 @@
     }
     
     // =================================================================================
-    // --- VISUALIZACIONES ESTÁTICAS ---
+    // --- GRÁFICA PERSONALIZABLE (NUEVA) ---
     // =================================================================================
-    function createSummaryTable(data) {
-        const formatCurrency = d3.format("$,.0f");
-        const summaryData = [
-            { label: "Empleados Totales", value: data.length },
-            { label: "Salario Promedio", value: formatCurrency(d3.mean(data, d => d.salary)) },
-            { label: "Salario Mediano", value: formatCurrency(d3.median(data, d => d.salary)) },
-            { label: "Edad Promedio", value: d3.mean(data, d => d.age).toFixed(1) }
-        ];
-        d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
-            .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
-    }
-    
-    function createDonutChart(containerId, groupByKey) {
-        const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
+    function createCustomizableChart() {
+        const numericalColumns = ["age", "yearsExperience", "salary"];
+        const columnLabels = { "age": "Edad", "yearsExperience": "Años de Experiencia", "salary": "Salario" };
+
+        const xSelect = d3.select("#x-axis-select");
+        const ySelect = d3.select("#y-axis-select");
+
+        numericalColumns.forEach(col => {
+            xSelect.append("option").attr("value", col).text(columnLabels[col]);
+            ySelect.append("option").attr("value", col).text(columnLabels[col]);
+        });
+        
+        xSelect.property("value", "age");
+        ySelect.property("value", "salary");
+
+        xSelect.on("change", () => updateCustomizableChart(true));
+        ySelect.on("change", () => updateCustomizableChart(true));
+        
+        const containerId = "#customizable-chart";
         const containerNode = d3.select(containerId).node();
-        if(!containerNode) return;
-        const width = containerNode.getBoundingClientRect().width;
-        const height = 300;
-        const radius = Math.min(width, height) / 2 - 20;
-        const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
-            .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
-        const pie = d3.pie().value(d => d.value).sort(null);
-        const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
-        svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
-            .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
-            .style("transition", "opacity 0.3s, transform 0.3s")
-            .on("mouseover", function(event, d) {
-                d3.select(this).style("transform", "scale(1.05)");
-                const percent = (d.data.value / processedData.length * 100).toFixed(1);
-                showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value} empleados (${percent}%)`);
-            })
-            .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
+        const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+
+        const svg = d3.select(containerId).append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        
+        svg.append("g").attr("class", "x-axis axis");
+        svg.append("g").attr("class", "y-axis axis");
+        svg.append("text").attr("class", "x-label axis-label").attr("text-anchor", "middle").style("font-size", "14px");
+        svg.append("text").attr("class", "y-label axis-label").attr("text-anchor", "middle").attr("transform", "rotate(-90)").style("font-size", "14px");
+        svg.append("g").attr("class", "dots-container");
+
+        updateCustomizableChart();
     }
-    
+
+    function updateCustomizableChart(axisChanged = false) {
+        const containerId = "#customizable-chart";
+        const svg = d3.select(`${containerId} svg g`);
+        const activeIds = new Set(activeSelection.map(d => d.id));
+        
+        const xVar = d3.select("#x-axis-select").property("value");
+        const yVar = d3.select("#y-axis-select").property("value");
+        const columnLabels = { "age": "Edad", "yearsExperience": "Años de Experiencia", "salary": "Salario" };
+
+        const width = d3.select(`${containerId} svg`).attr("width") - margin.left - margin.right;
+        const height = d3.select(`${containerId} svg`).attr("height") - margin.top - margin.bottom;
+
+        const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
+        const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
+
+        if (axisChanged) {
+            svg.select(".x-axis").transition().duration(750).call(d3.axisBottom(x));
+            svg.select(".y-axis").transition().duration(750).call(d3.axisLeft(y_scale).tickFormat(d => yVar === 'salary' ? `$${d/1000}K` : d));
+        }
+
+        svg.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
+        svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height / 2).text(columnLabels[yVar]);
+
+        const dots = svg.select(".dots-container").selectAll("circle").data(processedData, d => d.id);
+
+        dots.enter().append("circle")
+            .attr("class", "dot")
+            .attr("r", 0)
+            .attr("cx", d => x(d[xVar]))
+            .attr("cy", d => y_scale(d[yVar]))
+            .merge(dots)
+            .on("mouseover", (e, d) => showTooltip(e, `<b>${columnLabels[xVar]}:</b> ${d[xVar]}<br><b>${columnLabels[yVar]}:</b> ${d3.format(",.0f")(d[yVar])}`))
+            .on("mouseout", hideTooltip)
+            .transition().duration(750)
+            .attr("cx", d => x(d[xVar]))
+            .attr("cy", d => y_scale(d[yVar]))
+            .attr("fill", d => colorScale(d.gender))
+            .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 0.8 : 0.05)
+            .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 5 : 0);
+        
+        dots.exit().transition().duration(500).attr("r", 0).remove();
+    }
+
+    // =================================================================================
+    // --- GRÁFICOS CORREGIDOS Y RESTANTES ---
+    // =================================================================================
+
     function createTopJobsChart(data) {
         const containerId = "#top-jobs-chart";
         d3.select(containerId).html("");
-        const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salary) }));
+        const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.avgSalary) }));
         const top10Jobs = avgSalaryByJob.sort((a, b) => b.avgSalary - a.avgSalary).slice(0, 10);
         
-        // Margen local con más espacio a la izquierda para las etiquetas
-        const job_margin = { top: 20, right: 30, bottom: 40, left: 180 };
+        // Margen local con más espacio a la izquierda para las etiquetas ajustadas
+        const job_margin = { top: 20, right: 30, bottom: 40, left: 200 };
         
         const containerNode = d3.select(containerId).node();
         const width = containerNode.getBoundingClientRect().width - job_margin.left - job_margin.right;
-        const height = 300;
+        const height = 400 - job_margin.top - job_margin.bottom;
         
         const svg = d3.select(containerId).append("svg").attr("width", width + job_margin.left + job_margin.right).attr("height", height + job_margin.top + job_margin.bottom).append("g").attr("transform", `translate(${job_margin.left},${job_margin.top})`);
         
         const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]);
-        const y = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
+        const y_scale = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
         
-        // Crear eje Y y aplicar la función de ajuste de texto
-        svg.append("g")
-           .call(d3.axisLeft(y))
+        // Llamar al eje Y y luego aplicar la función de ajuste de texto
+        svg.append("g").call(d3.axisLeft(y_scale))
            .selectAll(".tick text")
-           .call(wrap, job_margin.left - 10); // Llamar a la función wrap
+           .call(wrap, job_margin.left - 15); // Llamar a wrap con el ancho del margen
            
         svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
         
-        svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y(d.job)).attr("height", y.bandwidth()).attr("x", 0).attr("width", 0)
+        svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth()).attr("x", 0).attr("width", 0)
             .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Salario Prom.: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
             .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
     }
-
-    // =================================================================================
-    // --- GRÁFICOS INTERACTIVOS VINCULADOS ---
-    // =================================================================================
-    const y = {}; // Global para reinicio
-
+    
     function createScatterExperience(){
         d3.select("#scatter-experience").html("");
         const containerNode = d3.select("#scatter-experience").node();
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-        const height = 350 - margin.top - margin.bottom;
+        const height = 400 - margin.top - margin.bottom;
         const svg = d3.select("#scatter-experience").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -422,26 +460,23 @@
         svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Años de Experiencia");
         svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 20).attr("x", -height / 2).text("Salario (USD)");
         
-        svg.append("g").selectAll("circle").data(processedData, d => d.id)
-            .enter().append("circle")
-            .attr("class", "dot")
-            .attr("cx", d => x(d.yearsExperience))
-            .attr("cy", d => y_scale(d.salary))
+        svg.append("g").attr("class", "dots-container").selectAll("circle").data(processedData, d => d.id)
+            .enter().append("circle").attr("class", "dot")
+            .attr("cx", d => x(d.yearsExperience)).attr("cy", d => y_scale(d.salary))
             .attr("r", 0).attr("fill", d => colorScale(d.gender))
             .on("mouseover", (e, d) => showTooltip(e, `Exp: ${d.yearsExperience} años<br>Salario: $${d.salary.toLocaleString()}<br>Género: ${d.gender}`))
-            .on("mouseout", hideTooltip)
-            .transition().duration(500).delay((d,i) => i*2).attr("r", 4);
+            .on("mouseout", hideTooltip);
 
-        // --- CORRECCIÓN DE LA LEYENDA ---
-        const legend = svg.append("g").attr("transform", `translate(${width - 100}, -40)`); // Movida al margen superior
-        [...new Set(processedData.map(d => d.gender))].forEach((gender, i) => {
+        // --- LEYENDA CORREGIDA Y REUBICADA ---
+        const legend = svg.append("g").attr("transform", `translate(${width - 100}, -45)`);
+        [...new Set(processedData.map(d => d.gender))].sort().forEach((gender, i) => {
             const legendItem = legend.append("g").attr("class", "legend-item").attr("transform", `translate(0, ${i * 20})`)
                 .on("click", function() {
                     hiddenGroups.has(gender) ? hiddenGroups.delete(gender) : hiddenGroups.add(gender);
-                    updateAllCharts(activeSelection, true);
+                    updateAllCharts(activeSelection);
                 });
             legendItem.append("rect").attr("width", 15).attr("height", 15).attr("fill", colorScale(gender));
-            legendItem.append("text").attr("x", 20).attr("y", 12).text(gender).style("fill", "#333");
+            legendItem.append("text").attr("x", 20).attr("y", 12).text(gender).style("fill", "#333").style("font-size", "12px");
         });
 
         const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => {
@@ -460,14 +495,12 @@
         updateScatterExperience();
     }
     
-    function updateScatterExperience(preserveHidden = false){
+    function updateScatterExperience(){
         const activeIds = new Set(activeSelection.map(d => d.id));
         d3.select("#scatter-experience").selectAll(".dot")
-            .transition().duration(300)
+            .transition().duration(500)
             .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 0.8 : 0.05)
-            .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 5 : 0)
-            .style("stroke", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? "black" : "none")
-            .style("stroke-width", 1);
+            .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 5 : 0);
         
         d3.select("#scatter-experience").selectAll(".legend-item")
           .classed("hidden", function() {
@@ -475,93 +508,198 @@
             return hiddenGroups.has(gender);
           });
     }
+
+    // El resto de las funciones se mantienen como estaban, ya que su estructura es correcta.
+    // Solo se ajustan las llamadas a update para incluir la nueva gráfica.
+    createDonutChart, createSummaryTable, createStackedBarChart, updateStackedBarChart, createParallelCoordinates, updateParallelCoordinates;
     
-    // --- NUEVA GRÁFICA PERSONALIZABLE ---
-    function createCustomizableChart() {
-        const numericalColumns = ["age", "yearsExperience", "salary"];
-        const columnLabels = {
-            "age": "Edad",
-            "yearsExperience": "Años de Experiencia",
-            "salary": "Salario"
-        };
-
-        const xSelect = d3.select("#x-axis-select");
-        const ySelect = d3.select("#y-axis-select");
-
-        numericalColumns.forEach(col => {
-            xSelect.append("option").attr("value", col).text(columnLabels[col]);
-            ySelect.append("option").attr("value", col).text(columnLabels[col]);
-        });
-        
-        xSelect.property("value", "yearsExperience");
-        ySelect.property("value", "salary");
-
-        xSelect.on("change", () => updateCustomizableChart());
-        ySelect.on("change", () => updateCustomizableChart());
-        
-        const containerId = "#customizable-chart";
+    // El resto de las funciones minificadas de la pregunta original se reemplazan por versiones legibles y funcionales.
+    function createDonutChart(containerId, groupByKey) {
+        d3.select(containerId).html("");
+        const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
         const containerNode = d3.select(containerId).node();
-        const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-        const height = 350 - margin.top - margin.bottom;
-
-        const svg = d3.select(containerId).append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-        
-        svg.append("g").attr("class", "x-axis axis");
-        svg.append("g").attr("class", "y-axis axis");
-        svg.append("text").attr("class", "x-label axis-label").attr("text-anchor", "middle");
-        svg.append("text").attr("class", "y-label axis-label").attr("text-anchor", "middle").attr("transform", "rotate(-90)");
-        svg.append("g").attr("class", "dots-container");
-
-        updateCustomizableChart();
-    }
-
-    function updateCustomizableChart() {
-        const containerId = "#customizable-chart";
-        const svg = d3.select(`${containerId} svg g`);
-        const activeIds = new Set(activeSelection.map(d => d.id));
-        const xVar = d3.select("#x-axis-select").property("value");
-        const yVar = d3.select("#y-axis-select").property("value");
-        
-        const columnLabels = { "age": "Edad", "yearsExperience": "Años de Experiencia", "salary": "Salario" };
-
-        const width = d3.select(`${containerId} svg`).attr("width") - margin.left - margin.right;
-        const height = d3.select(`${containerId} svg`).attr("height") - margin.top - margin.bottom;
-
-        const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
-        const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
-
-        svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(500).call(d3.axisBottom(x));
-        svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y_scale));
-
-        svg.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
-        svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height / 2).text(columnLabels[yVar]);
-
-        const dots = svg.select(".dots-container").selectAll("circle").data(processedData, d => d.id);
-
-        dots.enter().append("circle")
-            .attr("r", 0)
-            .merge(dots)
-            .on("mouseover", (e, d) => showTooltip(e, `${columnLabels[xVar]}: ${d[xVar]}<br>${columnLabels[yVar]}: ${d[yVar]}`))
-            .on("mouseout", hideTooltip)
-            .transition().duration(500)
-            .attr("cx", d => x(d[xVar]))
-            .attr("cy", d => y_scale(d[yVar]))
-            .attr("fill", d => colorScale(d.gender))
-            .attr("opacity", d => activeIds.has(d.id) ? 0.8 : 0.05)
-            .attr("r", d => activeIds.has(d.id) ? 4 : 0);
-        
-        dots.exit().transition().duration(500).attr("r", 0).remove();
+        if(!containerNode) return;
+        const width = containerNode.getBoundingClientRect().width;
+        const height = 400;
+        const radius = Math.min(width, height) / 2.5;
+        const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
+            .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
+        const pie = d3.pie().value(d => d.value).sort(null);
+        const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
+        svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
+            .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
+            .on("mouseover", function(event, d) {
+                d3.select(this).style("transform", "scale(1.05)");
+                const percent = (d.data.value / processedData.length * 100).toFixed(1);
+                showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value} (${percent}%)`);
+            })
+            .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
     }
     
-    // --- GRÁFICOS RESTANTES (SIN CAMBIOS FUNCIONALES) ---
-    function createStackedBarChart(){d3.select("#stacked-bar").html("");const t=d3.select("#stacked-bar").node().getBoundingClientRect().width,e=d3.select("#stacked-bar").append("svg").attr("width",t).attr("height",400).append("g").attr("transform",`translate(${margin.left},${margin.top})`);e.append("g").attr("class","x-axis axis"),e.append("g").attr("class","y-axis axis"),e.append("g").attr("class","bars"),e.append("text").attr("class","x-label").attr("text-anchor","middle"),e.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)"),updateStackedBarChart()}
-    function updateStackedBarChart(){const t=d3.select("#stacked-bar").node();if(!t)return;const e=t.getBoundingClientRect().width,n=e-margin.left-margin.right,a=350-margin.top-margin.bottom;d3.select("#stacked-bar svg").attr("width",e).attr("height",400);const r=d3.select("#stacked-bar svg g"),o=[{min:0,max:5e4,label:"0-50K"},{min:50001,max:1e5,label:"50-100K"},{min:100001,max:15e4,label:"100-150K"},{min:150001,max:1/0,label:">150K"}],i=[...new Set(processedData.map(t=>t.education))].sort(),c=o.map(t=>{const e={range:t.label};return i.forEach(n=>{e[n]=activeSelection.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<=t.max).length}),e}),l=d3.stack().keys(i)(c),s=d3.scaleBand().domain(o.map(t=>t.label)).range([0,n]).padding(.2),d=d3.scaleLinear().domain([0,d3.max(l,t=>d3.max(t,t=>t[1]))||10]).nice().range([a,0]);colorScale.domain(i),r.select(".x-axis").attr("transform",`translate(0,${a})`).transition().duration(500).call(d3.axisBottom(s)),r.select(".y-axis").transition().duration(500).call(d3.axisLeft(d)),r.select(".x-label").attr("x",n/2).attr("y",a+50).text("Rango Salarial (USD)"),r.select(".y-label").attr("y",-margin.left+20).attr("x",-a/2).text("Número de Empleados");const u=r.select(".bars").html("");u.selectAll("g").data(l).enter().append("g").attr("fill",t=>colorScale(t.key)).selectAll("rect").data(t=>t).enter().append("rect").attr("x",t=>s(t.data.range)).attr("y",a).attr("height",0).attr("width",s.bandwidth()).style("cursor","pointer").on("mouseover",function(t,e){const n=d3.select(this.parentNode).datum().key;showTooltip(t,`${n}<br>Rango: ${e.data.range}<br>Total: ${e[1]-e[0]}`)}).on("mouseout",hideTooltip).on("click",function(t,e){t.stopPropagation();const n=d3.select(this.parentNode).datum().key,a=e.data.range;if(activeStackedBarFilter&&activeStackedBarFilter.education===n&&activeStackedBarFilter.range===a)activeStackedBarFilter=null,updateAllCharts(processedData);else{activeStackedBarFilter={education:n,range:a};const t=o.find(t=>t.label===a),i=processedData.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<=t.max);updateAllCharts(i)}}).transition().duration(500).delay((t,e)=>50*e).attr("y",t=>d(t[1])).attr("height",t=>d(t[0])-d(t[1])),u.selectAll("rect").attr("opacity",function(t){if(!activeStackedBarFilter)return.9;const e=d3.select(this.parentNode).datum().key;return activeStackedBarFilter.range===t.data.range&&activeStackedBarFilter.education===e?1:.2})}
-    function createParallelCoordinates(){d3.select("#parallel-coordinates").html("");const t=d3.select("#parallel-coordinates").node().getBoundingClientRect().width,e=t-margin.left-margin.right,n=350-margin.top-margin.bottom,a=["age","yearsExperience","salary"],r=d3.select("#parallel-coordinates").append("svg").attr("width",t).attr("height",400).append("g").attr("transform",`translate(${margin.left},${margin.top})`);a.forEach(t=>{y[t]=d3.scaleLinear().domain(d3.extent(processedData,e=>e[t])).nice().range([n,0])});const o=d3.scalePoint().domain(a).range([0,e]);r.append("g").selectAll("path").data(processedData,t=>t.id).enter().append("path").attr("class","line").attr("d",t=>d3.line()(a.map(e=>[o(e),y[e](t[e])]))).attr("stroke",t=>colorScale(t.gender)).attr("stroke-opacity",0).attr("fill","none").transition().duration(500).attr("stroke-opacity",.5),r.selectAll(".axis-parallel").data(a).enter().append("g").attr("class","axis-parallel axis").attr("transform",t=>`translate(${o(t)},0)`).each(function(t){d3.select(this).call(d3.axisLeft(y[t]))}).append("text").style("text-anchor","middle").attr("y",-9).style("fill","#333").text(t=>"yearsExperience"===t?"Experiencia":"age"===t?"Edad":"Salario"),r.selectAll(".axis-parallel").append("g").attr("class","brush").each(function(t){d3.select(this).call(y[t].brush=d3.brushY().extent([[-10,0],[10,n]]).on("brush end",function(event){const selections = new Map();r.selectAll(".brush").filter(function(d){ return d3.brushSelection(this); }).each(function(d) { selections.set(d, d3.brushSelection(this).map(y[d].invert)); });const filteredData = processedData.filter(d => Array.from(selections.entries()).every(([key, [max, min]]) => d[key] >= min && d[key] <= max));updateAllCharts(filteredData);if(selections.size === 0) updateAllCharts(processedData);}))}),updateParallelCoordinates()}
-    function updateParallelCoordinates(){const t=new Set(activeSelection.map(t=>t.id));d3.select("#parallel-coordinates").selectAll(".line").transition().duration(300).attr("stroke-opacity",e=>t.has(e.id)?.7:.05).attr("stroke-width",e=>t.has(e.id)?1.5:1)}
+    function createSummaryTable(data) {
+        d3.select("#data-summary").html("");
+        const formatCurrency = d3.format("$,.0f");
+        const summaryData = [
+            { label: "Empleados Totales", value: data.length },
+            { label: "Salario Promedio", value: formatCurrency(d3.mean(data, d => d.salary)) },
+            { label: "Salario Mediano", value: formatCurrency(d3.median(data, d => d.salary)) },
+            { label: "Edad Promedio", value: d3.mean(data, d => d.age).toFixed(1) }
+        ];
+        d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
+            .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
+    }
 
+    function createStackedBarChart(){
+        d3.select("#stacked-bar").html("");
+        const containerNode = d3.select("#stacked-bar").node();
+        const width = containerNode.getBoundingClientRect().width;
+        const svg = d3.select("#stacked-bar").append("svg").attr("width", width).attr("height", 450)
+            .append("g").attr("transform",`translate(${margin.left},${margin.top})`);
+        svg.append("g").attr("class","x-axis axis");
+        svg.append("g").attr("class","y-axis axis");
+        svg.append("g").attr("class","bars");
+        svg.append("text").attr("class","x-label").attr("text-anchor","middle");
+        svg.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)");
+        updateStackedBarChart();
+    }
+    
+    function updateStackedBarChart(){
+        const containerNode = d3.select("#stacked-bar").node();
+        if(!containerNode) return;
+        const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+        const svg = d3.select("#stacked-bar svg g");
+        
+        const salaryRanges = [{min:0,max:50000,label:"0-50K"},{min:50001,max:100000,label:"50-100K"},{min:100001,max:150000,label:"100-150K"},{min:150001,max:Infinity,label:">150K"}];
+        const educationLevels = [...new Set(processedData.map(d => d.education))].sort();
+        
+        const stackedDataInput = salaryRanges.map(range => {
+            const entry = { range: range.label };
+            educationLevels.forEach(level => {
+                entry[level] = activeSelection.filter(d => d.education === level && d.salary >= range.min && d.salary <= range.max).length;
+            });
+            return entry;
+        });
+
+        const stack = d3.stack().keys(educationLevels);
+        const series = stack(stackedDataInput);
+        
+        const xScale = d3.scaleBand().domain(salaryRanges.map(d => d.label)).range([0, width]).padding(0.2);
+        const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]);
+        colorScale.domain(educationLevels);
+
+        svg.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(500).call(d3.axisBottom(xScale));
+        svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(yScale));
+        svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Rango Salarial (USD)");
+        svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height/2).text("Número de Empleados");
+
+        const barGroups = svg.select(".bars").selectAll("g").data(series);
+        barGroups.enter().append("g")
+            .merge(barGroups)
+            .attr("fill", d => colorScale(d.key));
+
+        const rects = barGroups.selectAll("rect").data(d => d);
+        rects.enter().append("rect")
+            .merge(rects)
+            .attr("x", d => xScale(d.data.range))
+            .attr("width", xScale.bandwidth())
+            .style("cursor", "pointer")
+            .on("mouseover",function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Rango: ${d.data.range}<br>Total: ${d[1]-d[0]}`);})
+            .on("mouseout",hideTooltip)
+            .on("click", function(event, d){
+                event.stopPropagation();
+                const education = d3.select(this.parentNode).datum().key;
+                const rangeLabel = d.data.range;
+                
+                if(activeStackedBarFilter && activeStackedBarFilter.education === education && activeStackedBarFilter.range === rangeLabel){
+                    activeStackedBarFilter = null;
+                    updateAllCharts(processedData);
+                } else {
+                    activeStackedBarFilter = { education, range: rangeLabel };
+                    const range = salaryRanges.find(r => r.label === rangeLabel);
+                    const filtered = processedData.filter(item => item.education === education && item.salary >= range.min && item.salary <= range.max);
+                    updateAllCharts(filtered);
+                }
+            })
+            .transition().duration(500)
+            .attr("y", d => yScale(d[1]))
+            .attr("height", d => yScale(d[0]) - yScale(d[1]));
+
+        svg.selectAll("rect").attr("opacity", function(d) {
+            if (!activeStackedBarFilter) return 0.9;
+            const key = d3.select(this.parentNode).datum().key;
+            return (activeStackedBarFilter.range === d.data.range && activeStackedBarFilter.education === key) ? 1 : 0.2;
+        });
+    }
+
+    function createParallelCoordinates(){
+        d3.select("#parallel-coordinates").html("");
+        const dimensions = ["age", "yearsExperience", "salary"];
+        const containerNode = d3.select("#parallel-coordinates").node();
+        const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+        const svg = d3.select("#parallel-coordinates").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
+            .append("g").attr("transform",`translate(${margin.left},${margin.top})`);
+        
+        const x = d3.scalePoint().range([0, width]).padding(1).domain(dimensions);
+        dimensions.forEach(dim => {
+            y[dim] = d3.scaleLinear().domain(d3.extent(processedData, d => d[dim])).nice().range([height, 0]);
+        });
+
+        svg.append("g").attr("class", "lines");
+        const axis = svg.selectAll(".axis").data(dimensions).enter().append("g").attr("class", "axis").attr("transform", d => `translate(${x(d)})`);
+        axis.append("g").each(function(d) { d3.select(this).call(d3.axisLeft().scale(y[d])); })
+            .append("text").style("text-anchor", "middle").attr("y", -9).text(d => d).style("fill", "#333");
+        
+        axis.append("g").attr("class", "brush").each(function(d) {
+            d3.select(this).call(y[d].brush = d3.brushY().extent([[-8, 0], [8, height]]).on("brush end", brushParallel));
+        });
+
+        function brushParallel(event) {
+            const activeBrushes = [];
+            svg.selectAll(".brush").filter(function(d){ return d3.brushSelection(this); }).each(function(d) {
+                activeBrushes.push({ dim: d, extent: d3.brushSelection(this).map(y[d].invert) });
+            });
+            
+            if (activeBrushes.length === 0) {
+                updateAllCharts(processedData);
+                return;
+            }
+
+            const filtered = processedData.filter(d => {
+                return activeBrushes.every(brush => {
+                    return brush.extent[1] <= d[brush.dim] && d[brush.dim] <= brush.extent[0];
+                });
+            });
+            updateAllCharts(filtered);
+        }
+        
+        updateParallelCoordinates();
+    }
+    
+    function updateParallelCoordinates(){
+        const activeIds = new Set(activeSelection.map(d => d.id));
+        const dimensions = ["age", "yearsExperience", "salary"];
+        const x = d3.scalePoint().range([0, d3.select("#parallel-coordinates svg").attr("width") - margin.left - margin.right]).padding(1).domain(dimensions);
+
+        function path(d) {
+            return d3.line()(dimensions.map(p => [x(p), y[p](d[p])]));
+        }
+
+        const lines = d3.select("#parallel-coordinates .lines").selectAll("path").data(processedData, d => d.id);
+        
+        lines.enter().append("path")
+            .attr("d", path)
+            .style("fill", "none")
+            .style("stroke-width", 1.5)
+            .merge(lines)
+            .transition().duration(300)
+            .style("stroke", d => colorScale(d.gender))
+            .style("stroke-opacity", d => activeIds.has(d.id) ? 0.7 : 0.05);
+            
+        lines.exit().remove();
+    }
+    
     </script>
 </body>
 </html>
