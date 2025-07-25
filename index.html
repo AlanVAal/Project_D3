@@ -130,6 +130,24 @@
                 </div>
             </div>
             
+            <!-- ========= CUSTOMIZABLE CHART (MOVED) ========= -->
+            <div class="section">
+                <h2 class="section-title">Custom Analysis</h2>
+                <div class="charts-grid" style="grid-template-columns: 1fr;">
+                    <div class="chart-container">
+                        <div class="chart-title">Customizable Chart</div>
+                        <p class="chart-description">Select two numerical variables to explore their relationship.</p>
+                        <div class="custom-chart-controls">
+                            <label for="x-axis-select">X-Axis:</label>
+                            <select id="x-axis-select"></select>
+                            <label for="y-axis-select">Y-Axis:</label>
+                            <select id="y-axis-select"></select>
+                        </div>
+                        <div id="customizable-chart"></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="section">
                 <h2 class="section-title">Distribution and Composition Analysis</h2>
                 <div class="charts-grid">
@@ -147,24 +165,6 @@
                         <div class="chart-title">Distribution by Education Level</div>
                         <p class="chart-description">Proportion of employees by education level.</p>
                         <div id="education-donut"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ========= CUSTOMIZABLE CHART (MOVED TO THE END) ========= -->
-            <div class="section">
-                <h2 class="section-title">Custom Analysis</h2>
-                <div class="charts-grid" style="grid-template-columns: 1fr;">
-                    <div class="chart-container">
-                        <div class="chart-title">Customizable Chart</div>
-                        <p class="chart-description">Select two numerical variables to explore their relationship.</p>
-                        <div class="custom-chart-controls">
-                            <label for="x-axis-select">X-Axis:</label>
-                            <select id="x-axis-select"></select>
-                            <label for="y-axis-select">Y-Axis:</label>
-                            <select id="y-axis-select"></select>
-                        </div>
-                        <div id="customizable-chart"></div>
                     </div>
                 </div>
             </div>
@@ -395,8 +395,7 @@
         
         svg.append("g").attr("class", "dots-container").selectAll("circle").data(processedData, d => d.id)
             .enter().append("circle").attr("class", "dot")
-            .attr("cx", d => x(d.yearsExperience)).attr("cy", d => y_scale(d.salary))
-            .attr("r", 0);
+            .attr("cx", d => x(d.yearsExperience)).attr("cy", d => y_scale(d.salary));
 
         const legend = svg.append("g").attr("transform", `translate(${width - 100}, -45)`);
         [...new Set(processedData.map(d => d.gender))].sort().forEach((gender, i) => {
@@ -425,12 +424,12 @@
         updateScatterExperience();
     }
     
+    // FASTER UPDATE
     function updateScatterExperience(){
         const activeIds = new Set(activeSelection.map(d => d.id));
         d3.select("#scatter-experience").selectAll(".dot")
             .on("mouseover", (e, d) => showTooltip(e, `Exp: ${d.yearsExperience} years<br>Salary: $${d.salary.toLocaleString()}<br>Gender: ${d.gender}`))
             .on("mouseout", hideTooltip)
-            .transition().duration(300)
             .attr("fill", d => colorScale(d.gender))
             .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 0.8 : 0.05)
             .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.gender) ? 5 : 0);
@@ -456,6 +455,7 @@
         updateStackedBarChart();
     }
     
+    // FASTER UPDATE
     function updateStackedBarChart(){
         const containerNode = d3.select("#stacked-bar").node();
         if(!containerNode) return;
@@ -481,8 +481,8 @@
         const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]);
         colorScale.domain(educationLevels);
 
-        svg.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(300).call(d3.axisBottom(xScale));
-        svg.select(".y-axis").transition().duration(300).call(d3.axisLeft(yScale));
+        svg.select(".x-axis").attr("transform",`translate(0,${height})`).call(d3.axisBottom(xScale));
+        svg.select(".y-axis").call(d3.axisLeft(yScale));
         svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)");
         svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height/2).text("Number of Employees");
 
@@ -510,7 +510,6 @@
                     updateAllCharts(filtered);
                 }
             })
-            .transition().duration(300)
             .attr("y", d => yScale(d[1]))
             .attr("height", d => yScale(d[0]) - yScale(d[1]));
 
