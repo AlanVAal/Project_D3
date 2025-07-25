@@ -207,11 +207,11 @@
      * Carga el archivo CSV y maneja el éxito o el fracaso.
      */
     function loadData() {
-        d3.csv(csvFilePath).then(data => {
+        d3.csv(Salary_Data.csv).then(data => {
             processRawData(data);
             initializeDashboard();
         }).catch(error => {
-            showError(`No se pudo cargar el archivo desde "${csvFilePath}".<br>Verifica dos cosas:<br>1. Que el nombre del archivo en el código es exacto (sensible a mayúsculas).<br>2. Que estás ejecutando esta página desde un servidor local (como la extensión 'Live Server' de VS Code).`);
+            showError(`No se pudo cargar el archivo desde "${Salary_Data.csv}".<br>Verifica dos cosas:<br>1. Que el nombre del archivo en el código es exacto (sensible a mayúsculas).<br>2. Que estás ejecutando esta página desde un servidor local (como la extensión 'Live Server' de VS Code).`);
         });
     }
 
