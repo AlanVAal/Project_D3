@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto Avanzado de Visualización de Datos - Análisis Salarial</title>
+    <title>Advanced Data Viz Project - Salary Analysis</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- Estructura y Tema General --- */
+        /* --- General Structure & Theme --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,7 +28,7 @@
         .header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
         .authors { font-size: 1.1rem; color: #555; font-style: italic; }
         
-        /* --- Estilos de las Secciones y Contenedores --- */
+        /* --- Sections & Containers --- */
         .section {
             background: rgba(36, 59, 85, 0.7);
             margin: 2rem 0;
@@ -52,7 +52,7 @@
         }
         .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
 
-        /* --- Estilos de los Gráficos y Texto --- */
+        /* --- Chart Text & Styles --- */
         .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
         .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
         .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
@@ -61,105 +61,84 @@
         .dot { transition: opacity 0.3s, transform 0.3s; }
         .line { fill: none; stroke-width: 1.5px; transition: stroke-opacity 0.3s; }
         
-        /* --- Controles e Interactividad --- */
+        /* --- Controls & Interactivity --- */
         .controls { text-align: center; margin-bottom: 1rem; }
         .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
         .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
         .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
 
-        /* --- NUEVO: Animación de Carga (Spinner) --- */
+        /* --- Status Messages & Loader --- */
         .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
         .error-message { color: #ff6b6b; }
-        .loader {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #4a90e2;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
+        .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- NUEVO: Estilos para la Tabla de Resumen --- */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1.5rem;
-            text-align: center;
-        }
-        .summary-item {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1.5rem;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+        /* --- Summary Table --- */
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
+        .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
         .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
         .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
         
-        /* --- NUEVO: Estilos para Leyenda Interactiva --- */
+        /* --- Interactive Legend --- */
         .legend-item { cursor: pointer; }
         .legend-item.hidden { opacity: 0.5; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-chart-bar"></i> Proyecto Avanzado de Visualización de Datos</h1>
+        <h1><i class="fas fa-chart-bar"></i> Advanced Data Visualization Project</h1>
         <div class="authors">Sergio Barrera • Ariel Buenfil • Damaris Dzul • Diego Monroy • Alan Valbuena</div>
     </div>
 
     <div class="container">
-        <div id="loading" class="status-message"><div class="loader"></div><p style="margin-top: 1rem;">Cargando Datos...</p></div>
+        <div id="loading" class="status-message"><div class="loader"></div><p style="margin-top: 1rem;">Loading Data...</p></div>
         <div id="error" class="status-message error-message" style="display: none;"></div>
 
         <div id="content" style="display: none;">
-            <!-- NUEVO: SECCIÓN DE RESUMEN GENERAL -->
             <div class="section">
-                <h2 class="section-title">Resumen General de los Datos</h2>
+                <h2 class="section-title">Overall Data Summary</h2>
                 <div id="data-summary" class="summary-grid"></div>
             </div>
             
-            <div class="controls"><button id="resetButton" class="reset-btn"><i class="fas fa-sync-alt"></i> Reiniciar Filtros</button></div>
+            <div class="controls"><button id="resetButton" class="reset-btn"><i class="fas fa-sync-alt"></i> Reset Filters</button></div>
 
-            <!-- ANÁLISIS INTERACTIVO VINCULADO -->
             <div class="section">
-                <h2 class="section-title">Análisis Interactivo Vinculado</h2>
+                <h2 class="section-title">Interactive Linked Analysis</h2>
                 <div class="charts-grid">
                     <div class="chart-container">
-                        <div class="chart-title">Salario vs. Experiencia (con Leyenda Interactiva)</div>
-                        <p class="chart-description">Analiza la correlación entre experiencia y salario. <b>Interactúa:</b> Dibuja un rectángulo o haz clic en la leyenda.</p>
+                        <div class="chart-title">Salary vs. Experience (Interactive Legend)</div>
+                        <p class="chart-description">Analyze the correlation between experience and salary. <b>Interact:</b> Draw a rectangle or click the legend.</p>
                         <div id="scatter-experience"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Composición Educativa por Rango Salarial</div>
-                        <p class="chart-description">Observa qué nivel educativo predomina en cada rango. <b>Interactúa:</b> Haz clic en un segmento para filtrar.</p>
+                        <div class="chart-title">Educational Composition by Salary Range</div>
+                        <p class="chart-description">See which educational level is most common. <b>Interact:</b> Click a colored segment to filter.</p>
                         <div id="stacked-bar"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Coordenadas Paralelas</div>
-                        <p class="chart-description">Explora relaciones multivariadas. <b>Interactúa:</b> Arrastra verticalmente sobre los ejes para filtrar.</p>
+                        <div class="chart-title">Parallel Coordinates</div>
+                        <p class="chart-description">Explore multivariate relationships. <b>Interact:</b> Drag vertically on the axes to filter.</p>
                         <div id="parallel-coordinates"></div>
                     </div>
                 </div>
             </div>
             
-            <!-- ANÁLISIS DE DISTRIBUCIÓN -->
             <div class="section">
-                <h2 class="section-title">Análisis de Distribución y Composición</h2>
+                <h2 class="section-title">Distribution & Composition Analysis</h2>
                 <div class="charts-grid">
                     <div class="chart-container">
-                        <div class="chart-title">Los 10 Puestos Mejor Pagados</div>
-                        <p class="chart-description">Identifica los roles más lucrativos basados en el salario promedio.</p>
+                        <div class="chart-title">Top 10 Highest-Paid Job Titles</div>
+                        <p class="chart-description">Identifies the most lucrative roles based on average salary.</p>
                         <div id="top-jobs-chart"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Distribución por Género</div>
-                        <p class="chart-description">Proporción de empleados por género en el conjunto de datos.</p>
+                        <div class="chart-title">Distribution by Gender</div>
+                        <p class="chart-description">Proportion of employees by gender in the dataset.</p>
                         <div id="gender-donut"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Distribución por Nivel Educativo</div>
-                        <p class="chart-description">Proporción de empleados por nivel de educación.</p>
+                        <div class="chart-title">Distribution by Education Level</div>
+                        <p class="chart-description">Proportion of employees by education level.</p>
                         <div id="education-donut"></div>
                     </div>
                 </div>
@@ -180,15 +159,18 @@
     const tooltip = d3.select(".tooltip");
     const colorScale = d3.scaleOrdinal(d3.schemeAccent);
     let activeStackedBarFilter = null;
-    let hiddenGroups = new Set(); // Para la leyenda interactiva
+    let hiddenGroups = new Set();
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!  CRÍTICO !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // EL NOMBRE DE ARCHIVO DEBE COINCIDIR EXACTAMENTE CON TU ARCHIVO, INCLUYENDO MAYÚSCULAS.
-    // "Salary_Data.csv" ES DIFERENTE DE "salary_data.csv".
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const csvFilePath = "Salary_Data.csv"; 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!  CRITICAL CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //
+    // The filename below MUST EXACTLY MATCH your file in the GitHub repository.
+    // GitHub is case-sensitive: "Salary_Data.csv" is NOT the same as "salary_data.csv".
+    // Using "./" is a best practice for relative paths.
+    //
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    const csvFilePath = "./Salary_Data.csv"; 
 
-    // Mapeo de columnas: ajusta los valores para que coincidan con los encabezados de tu CSV.
+    // Column mapping: Adjust the values to match your CSV headers exactly.
     const columnMapping = {
         age: "Age",
         gender: "Gender",
@@ -204,20 +186,20 @@
     document.addEventListener('DOMContentLoaded', () => { loadData(); });
 
     /**
-     * Carga el archivo CSV y maneja el éxito o el fracaso.
+     * Loads the CSV file and handles success or failure.
      */
     function loadData() {
-        d3.csv(Salary_Data.csv).then(data => {
+        d3.csv(csvFilePath).then(data => {
             processRawData(data);
             initializeDashboard();
         }).catch(error => {
-            showError(`No se pudo cargar el archivo desde "${Salary_Data.csv}".<br>Verifica dos cosas:<br>1. Que el nombre del archivo en el código es exacto (sensible a mayúsculas).<br>2. Que estás ejecutando esta página desde un servidor local (como la extensión 'Live Server' de VS Code).`);
+            showError(`Failed to load data from "${csvFilePath}".<br>Please check these two things:<br>1. The filename in the code is an exact, case-sensitive match to your file in the GitHub repository.<br>2. The file is located in the same directory as this index.html file.`);
         });
     }
 
     /**
-     * Procesa los datos crudos del CSV, limpiándolos y convirtiéndolos a los tipos correctos.
-     * @param {Array} rawData - Datos directamente desde d3.csv.
+     * Processes the raw CSV data into a clean, usable format.
+     * @param {Array} rawData - Data directly from d3.csv.
      */
     function processRawData(rawData) {
         processedData = rawData.map((row, i) => ({
@@ -233,22 +215,17 @@
     }
 
     /**
-     * Prepara el dashboard una vez que los datos están listos.
+     * Sets up the dashboard once data is ready.
      */
     function initializeDashboard() {
         d3.select("#loading").style("display", "none");
         d3.select("#content").style("display", "block");
         
         d3.select("#resetButton").on("click", () => {
-            // Limpiar filtros visuales
             d3.select("#scatter-experience .brush").call(d3.brush().move, null);
             d3.selectAll("#parallel-coordinates .brush").each(function(d) { d3.select(this).call(y[d].brush.move, null); });
-            
-            // Limpiar estado de filtros
             activeStackedBarFilter = null;
             hiddenGroups.clear();
-            
-            // Actualizar todos los gráficos con el conjunto de datos completo
             updateAllCharts(processedData);
         });
         
@@ -267,205 +244,87 @@
     // =================================================================================
     function updateAllCharts(data, preserveHiddenGroups = false) {
         activeSelection = data;
-        if (!preserveHiddenGroups) {
-            updateScatterExperience();
-        }
+        updateScatterExperience(preserveHiddenGroups);
         updateStackedBarChart();
         updateParallelCoordinates();
     }
 
     function createAllVisualizations() {
-        // Nuevas visualizaciones
         createSummaryTable(processedData);
-        createDonutChart("#gender-donut", "gender", "Por Género");
-        createDonutChart("#education-donut", "education", "Por Nivel Educativo");
+        createDonutChart("#gender-donut", "gender", "By Gender");
+        createDonutChart("#education-donut", "education", "By Education Level");
         createTopJobsChart(processedData);
-
-        // Gráficos vinculados existentes
         createScatterExperience();
         createStackedBarChart();
         createParallelCoordinates();
     }
     
     // =================================================================================
-    // --- NUEVAS VISUALIZACIONES ---
+    // --- NEW VISUALIZATIONS ---
     // =================================================================================
-
-    /**
-     * Crea la tabla de resumen con métricas clave.
-     */
     function createSummaryTable(data) {
         const formatCurrency = d3.format("$,.0f");
         const summaryData = [
-            { label: "Total de Empleados", value: data.length },
-            { label: "Salario Promedio", value: formatCurrency(d3.mean(data, d => d.salary)) },
-            { label: "Salario Mediano", value: formatCurrency(d3.median(data, d => d.salary)) },
-            { label: "Edad Promedio", value: d3.mean(data, d => d.age).toFixed(1) }
+            { label: "Total Employees", value: data.length },
+            { label: "Average Salary", value: formatCurrency(d3.mean(data, d => d.salary)) },
+            { label: "Median Salary", value: formatCurrency(d3.median(data, d => d.salary)) },
+            { label: "Average Age", value: d3.mean(data, d => d.age).toFixed(1) }
         ];
-
-        const summaryContainer = d3.select("#data-summary");
-        summaryContainer.selectAll(".summary-item")
-            .data(summaryData)
-            .enter()
-            .append("div")
-            .attr("class", "summary-item")
-            .html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
+        d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
+            .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
     }
     
-    /**
-     * Función reutilizable para crear gráficos de dona.
-     */
-    function createDonutChart(containerId, groupByKey, title) {
+    function createDonutChart(containerId, groupByKey) {
         const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
-        
         const containerNode = d3.select(containerId).node();
         if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width;
         const height = 300;
         const radius = Math.min(width, height) / 2 - 20;
-
         const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
             .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
-
         const pie = d3.pie().value(d => d.value).sort(null);
         const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
-
-        const path = svg.selectAll("path")
-            .data(pie(groupedData))
-            .enter().append("path")
-            .attr("d", arc)
-            .attr("fill", d => colorScale(d.data.key))
-            .attr("stroke", "white")
-            .style("stroke-width", "2px")
+        svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
+            .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
             .style("transition", "opacity 0.3s, transform 0.3s")
             .on("mouseover", function(event, d) {
                 d3.select(this).style("transform", "scale(1.05)");
                 const percent = (d.data.value / processedData.length * 100).toFixed(1);
-                showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value} empleados (${percent}%)`);
+                showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value} employees (${percent}%)`);
             })
-            .on("mouseout", function() {
-                d3.select(this).style("transform", "scale(1)");
-                hideTooltip();
-            });
+            .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
     }
     
-    /**
-     * Crea un gráfico de barras horizontales con los 10 puestos mejor pagados.
-     */
     function createTopJobsChart(data) {
         const containerId = "#top-jobs-chart";
         d3.select(containerId).html("");
-
-        const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({
-            job: key,
-            avgSalary: d3.mean(value, d => d.salary)
-        }));
-        
+        const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salary) }));
         const top10Jobs = avgSalaryByJob.sort((a, b) => b.avgSalary - a.avgSalary).slice(0, 10);
-
         const containerNode = d3.select(containerId).node();
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
         const height = 300;
-
-        const svg = d3.select(containerId).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
-            .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-            
+        const svg = d3.select(containerId).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
         const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]);
         const y = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
-
         svg.append("g").call(d3.axisLeft(y));
         svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
-
-        svg.selectAll(".bar")
-            .data(top10Jobs)
-            .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("y", d => y(d.job))
-            .attr("height", y.bandwidth())
-            .attr("x", 0)
-            .attr("width", 0) // Inicia en 0 para la transición
-            .attr("fill", "#4a90e2")
-            .on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Salario Prom.: ${d3.format("$,.0f")(d.avgSalary)}`))
-            .on("mouseout", hideTooltip)
-            .transition()
-            .duration(800)
-            .delay((d, i) => i * 50)
-            .attr("width", d => x(d.avgSalary));
+        svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y(d.job)).attr("height", y.bandwidth()).attr("x", 0).attr("width", 0)
+            .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
+            .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
     }
-
 
     // =================================================================================
-    // --- GRÁFICOS INTERACTIVOS (CON MEJORAS) ---
+    // --- INTERACTIVE LINKED CHARTS ---
     // =================================================================================
-
-    function createScatterExperience() {
-        d3.select("#scatter-experience").html("");
-        const containerWidth = d3.select("#scatter-experience").node().getBoundingClientRect().width;
-        const width = containerWidth - margin.left - margin.right;
-        const height = 300 - margin.top - margin.bottom;
-        const svg = d3.select("#scatter-experience").append("svg").attr("width", containerWidth).attr("height", 300 + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-        const x = d3.scaleLinear().domain(d3.extent(processedData, d => d.yearsExperience)).nice().range([0, width]);
-        const y = d3.scaleLinear().domain(d3.extent(processedData, d => d.salary)).nice().range([height, 0]);
-        svg.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-        svg.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y).tickFormat(d => `$${d/1000}K`));
-        svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Años de Experiencia");
-        svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 20).attr("x", -height / 2).text("Salario (USD)");
-
-        const dots = svg.append("g").selectAll("circle").data(processedData, d => d.id);
-        dots.enter().append("circle").attr("class", "dot")
-            .attr("cx", d => x(d.yearsExperience)).attr("cy", d => y(d.salary)).attr("r", 0) // Inicia en 0
-            .attr("fill", d => colorScale(d.gender))
-            .on("mouseover", (event, d) => showTooltip(event, `Exp: ${d.yearsExperience} años<br>Salario: $${d.salary.toLocaleString()}<br>Género: ${d.gender}`))
-            .on("mouseout", hideTooltip)
-            .transition().duration(500).delay((d,i) => i*2).attr("r", 4);
-        
-        // Añadir leyenda interactiva
-        const legend = svg.append("g").attr("transform", `translate(${width - 100}, 0)`);
-        const groups = [...new Set(processedData.map(d => d.gender))];
-        groups.forEach((group, i) => {
-            const legendItem = legend.append("g").attr("class", "legend-item").attr("transform", `translate(0, ${i * 20})`)
-            .on("click", function() {
-                if (hiddenGroups.has(group)) {
-                    hiddenGroups.delete(group);
-                } else {
-                    hiddenGroups.add(group);
-                }
-                updateScatterExperience(true); // Actualizar sin cambiar la selección principal
-            });
-            legendItem.append("rect").attr("width", 15).attr("height", 15).attr("fill", colorScale(group));
-            legendItem.append("text").attr("x", 20).attr("y", 12).text(group);
-        });
-
-        const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => {
-            if (!event.selection) { if (event.sourceEvent) updateAllCharts(processedData); return; }
-            const [[x0, y0], [x1, y1]] = event.selection;
-            const selected = processedData.filter(d => x(d.yearsExperience) >= x0 && x(d.yearsExperience) <= x1 && y(d.salary) >= y0 && y(d.salary) <= y1);
-            updateAllCharts(selected);
-        });
-        svg.append("g").attr("class", "brush").call(brush);
-        updateScatterExperience();
-    }
-    
-    function updateScatterExperience(isLegendClick = false) {
-        const selectionIds = new Set(activeSelection.map(d => d.id));
-        d3.select("#scatter-experience").selectAll(".dot")
-            .transition().duration(300)
-            .attr("opacity", d => (selectionIds.has(d.id) && !hiddenGroups.has(d.gender)) ? 0.8 : 0.05)
-            .attr("r", d => (selectionIds.has(d.id) && !hiddenGroups.has(d.gender)) ? 5 : 0)
-            .style("stroke", d => (selectionIds.has(d.id) && !hiddenGroups.has(d.gender)) ? "black" : "none")
-            .style("stroke-width", 1);
-            
-        d3.selectAll("#scatter-experience .legend-item")
-            .classed("hidden", d => hiddenGroups.has(d3.select(this).text()));
-    }
-
-    const y = {};
-    const chartFunctions = { createScatterExperience, updateScatterExperience, createStackedBarChart, updateStackedBarChart, createParallelCoordinates, updateParallelCoordinates, createTopJobsChart, createDonutChart, createSummaryTable };
-    // Las funciones restantes se mantienen igual, ya que su lógica es sólida.
-    // Solo se han añadido las transiciones y efectos visuales.
-    function createStackedBarChart(){d3.select("#stacked-bar").html("");const t=d3.select("#stacked-bar").node().getBoundingClientRect().width,e=d3.select("#stacked-bar").append("svg").attr("width",t).attr("height",300).append("g").attr("transform",`translate(${margin.left},${margin.top})`);e.append("g").attr("class","x-axis axis"),e.append("g").attr("class","y-axis axis"),e.append("g").attr("class","bars"),e.append("text").attr("class","x-label").attr("text-anchor","middle"),e.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)"),updateStackedBarChart()}function updateStackedBarChart(){const t=d3.select("#stacked-bar").node();if(!t)return;const e=t.getBoundingClientRect().width,n=e-margin.left-margin.right,a=300-margin.top-margin.bottom;d3.select("#stacked-bar svg").attr("width",e);const r=d3.select("#stacked-bar svg g"),o=[{min:0,max:5e4,label:"0-50K"},{min:50001,max:1e5,label:"50-100K"},{min:100001,max:15e4,label:"100-150K"},{min:150001,max:1/0,label:"150K+"}],i=[...new Set(processedData.map(t=>t.education))].sort(),c=o.map(t=>{const e={range:t.label};return i.forEach(n=>{e[n]=activeSelection.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max).length}),e}),l=d3.stack().keys(i)(c),s=d3.scaleBand().domain(o.map(t=>t.label)).range([0,n]).padding(.2),d=d3.scaleLinear().domain([0,d3.max(l,t=>d3.max(t,t=>t[1]))||10]).nice().range([a,0]);colorScale.domain(i),r.select(".x-axis").attr("transform",`translate(0,${a})`).transition().duration(500).call(d3.axisBottom(s)),r.select(".y-axis").transition().duration(500).call(d3.axisLeft(d)),r.select(".x-label").attr("x",n/2).attr("y",a+margin.top).text("Rango Salarial (USD)"),r.select(".y-label").attr("y",-margin.left+20).attr("x",-a/2).text("Número de Empleados");const u=r.select(".bars").html("");u.selectAll("g").data(l).enter().append("g").attr("fill",t=>colorScale(t.key)).selectAll("rect").data(t=>t).enter().append("rect").attr("x",t=>s(t.data.range)).attr("y",a).attr("height",0).attr("width",s.bandwidth()).style("cursor","pointer").on("mouseover",function(t,e){const n=d3.select(this.parentNode).datum().key;showTooltip(t,`${n}<br>Rango: ${e.data.range}<br>Total: ${e[1]-e[0]}`)}).on("mouseout",hideTooltip).on("click",function(t,e){t.stopPropagation();const n=d3.select(this.parentNode).datum().key,a=e.data.range;if(activeStackedBarFilter&&activeStackedBarFilter.education===n&&activeStackedBarFilter.range===a)activeStackedBarFilter=null,updateAllCharts(processedData);else{activeStackedBarfer={education:n,range:a};const t=o.find(t=>t.label===a),i=processedData.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max);updateAllCharts(i)}}).transition().duration(500).delay((t,e)=>e*50).attr("y",t=>d(t[1])).attr("height",t=>d(t[0])-d(t[1])),u.selectAll("rect").attr("opacity",function(t){if(!activeStackedBarFilter)return.9;const e=d3.select(this.parentNode).datum().key;return activeStackedBarFilter.range===t.data.range&&activeStackedBarFilter.education===e?1:.2})}function createParallelCoordinates(){d3.select("#parallel-coordinates").html("");const t=d3.select("#parallel-coordinates").node().getBoundingClientRect().width,e=t-margin.left-margin.right,n=300-margin.top-margin.bottom,a=["age","yearsExperience","salary"],r=d3.select("#parallel-coordinates").append("svg").attr("width",t).attr("height",300).append("g").attr("transform",`translate(${margin.left},${margin.top})`);a.forEach(t=>{y[t]=d3.scaleLinear().domain(d3.extent(processedData,e=>e[t])).nice().range([n,0])});const o=d3.scalePoint().domain(a).range([0,e]);r.append("g").selectAll("path").data(processedData,t=>t.id).enter().append("path").attr("class","line").attr("d",t=>d3.line()(a.map(e=>[o(e),y[e](t[e])]))).attr("stroke",t=>colorScale(t.gender)).attr("stroke-opacity",0).attr("fill","none").transition().duration(500).attr("stroke-opacity",.5),r.selectAll(".axis-parallel").data(a).enter().append("g").attr("class","axis-parallel axis").attr("transform",t=>`translate(${o(t)},0)`).each(function(t){d3.select(this).call(d3.axisLeft(y[t]))}).append("text").style("text-anchor","middle").attr("y",-9).style("fill","#333").text(t=>"yearsExperience"===t?"Experiencia":"age"===t?"Edad":"Salario"),r.selectAll(".axis-parallel").append("g").attr("class","brush").each(function(t){d3.select(this).call(y[t].brush=d3.brushY().extent([[-10,0],[10,n]]).on("brush end",function(){const t=new Map;r.selectAll(".brush").filter(function(t){return d3.brushSelection(this)}).each(function(t){selections.set(d,d3.brushSelection(this).map(y[d].invert))});const e=processedData.filter(t=>Array.from(selections.entries()).every(([e,[n,a]])=>t[e]>=a&&t[e]<=n));updateAllCharts(e)}))}),updateParallelCoordinates()}function updateParallelCoordinates(){const t=new Set(activeSelection.map(t=>t.id));d3.select("#parallel-coordinates").selectAll(".line").transition().duration(300).attr("stroke-opacity",e=>t.has(e.id)?.7:.05).attr("stroke-width",e=>t.has(e.id)?1.5:1)}
-    
+    const y = {}; // Global for reset
+    // The rest of the charting functions are the same and correct.
+    function createScatterExperience() { d3.select("#scatter-experience").html(""); const t = d3.select("#scatter-experience").node().getBoundingClientRect().width; const e = t - margin.left - margin.right; const n = 300 - margin.top - margin.bottom; const a = d3.select("#scatter-experience").append("svg").attr("width", t).attr("height", 300 + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`); const r = d3.scaleLinear().domain(d3.extent(processedData, (t) => t.yearsExperience)).nice().range([0, e]); const o = d3.scaleLinear().domain(d3.extent(processedData, (t) => t.salary)).nice().range([n, 0]); a.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${n})`).call(d3.axisBottom(r)), a.append("g").attr("class", "y-axis axis").call(d3.axisLeft(o).tickFormat((t) => `$${t / 1e3}K`)), a.append("text").attr("text-anchor", "middle").attr("x", e / 2).attr("y", n + 50).text("Years of Experience"), a.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 20).attr("x", -n / 2).text("Salary (USD)"); const i = a.append("g").selectAll("circle").data(processedData, (t) => t.id); i.enter().append("circle").attr("class", "dot").attr("cx", (t) => r(t.yearsExperience)).attr("cy", (t) => o(t.salary)).attr("r", 0).attr("fill", (t) => colorScale(t.gender)).on("mouseover", (t, e) => showTooltip(t, `Exp: ${e.yearsExperience} years<br>Salary: $${e.salary.toLocaleString()}<br>Gender: ${e.gender}`)).on("mouseout", hideTooltip).transition().duration(500).delay((t, e) => 2 * e).attr("r", 4); const c = a.append("g").attr("transform", `translate(${e - 100}, 0)`); [...new Set(processedData.map((t) => t.gender))].forEach((t, e) => { const n = c.append("g").attr("class", "legend-item").attr("transform", `translate(0, ${20 * e})`).on("click", function () { hiddenGroups.has(t) ? hiddenGroups.delete(t) : hiddenGroups.add(t), updateScatterExperience(!0); }); n.append("rect").attr("width", 15).attr("height", 15).attr("fill", colorScale(t)), n.append("text").attr("x", 20).attr("y", 12).text(t); }); const l = d3.brush().extent([[0, 0], [e, n]]).on("end", (t) => { if (t.selection) { const [[n, a], [i, c]] = t.selection, l = processedData.filter((t) => r(t.yearsExperience) >= n && r(t.yearsExperience) <= i && o(t.salary) >= a && o(t.salary) <= c); updateAllCharts(l); } else t.sourceEvent && updateAllCharts(processedData); }); a.append("g").attr("class", "brush").call(l), updateScatterExperience(); }
+    function updateScatterExperience() { const t = new Set(activeSelection.map((t) => t.id)); d3.select("#scatter-experience").selectAll(".dot").transition().duration(300).attr("opacity", (e) => t.has(e.id) && !hiddenGroups.has(e.gender) ? 0.8 : 0.05).attr("r", (e) => t.has(e.id) && !hiddenGroups.has(e.gender) ? 5 : 0).style("stroke", (e) => t.has(e.id) && !hiddenGroups.has(e.gender) ? "black" : "none").style("stroke-width", 1), d3.selectAll("#scatter-experience .legend-item").classed("hidden", (t) => hiddenGroups.has(d3.select(this).text())); }
+    function createStackedBarChart() { d3.select("#stacked-bar").html(""); const t = d3.select("#stacked-bar").node().getBoundingClientRect().width, e = d3.select("#stacked-bar").append("svg").attr("width", t).attr("height", 300).append("g").attr("transform", `translate(${margin.left},${margin.top})`); e.append("g").attr("class", "x-axis axis"), e.append("g").attr("class", "y-axis axis"), e.append("g").attr("class", "bars"), e.append("text").attr("class", "x-label").attr("text-anchor", "middle"), e.append("text").attr("class", "y-label").attr("text-anchor", "middle").attr("transform", "rotate(-90)"), updateStackedBarChart(); }
+    function updateStackedBarChart() { const t = d3.select("#stacked-bar").node(); if (!t) return; const e = t.getBoundingClientRect().width, n = e - margin.left - margin.right, a = 300 - margin.top - margin.bottom; d3.select("#stacked-bar svg").attr("width", e); const r = d3.select("#stacked-bar svg g"), o = [{ min: 0, max: 5e4, label: "0-50K" }, { min: 50001, max: 1e5, label: "50-100K" }, { min: 100001, max: 15e4, label: "100-150K" }, { min: 150001, max: 1 / 0, label: "150K+" },], i = [...new Set(processedData.map((t) => t.education))].sort(), c = o.map((t) => { const e = { range: t.label }; return ( i.forEach((n) => { e[n] = activeSelection.filter( (e) => e.education === n && e.salary >= t.min && e.salary < t.max ).length; }), e ); }), l = d3.stack().keys(i)(c), s = d3.scaleBand().domain(o.map((t) => t.label)).range([0, n]).padding(0.2), d = d3.scaleLinear().domain([0, d3.max(l, (t) => d3.max(t, (t) => t[1])) || 10,]).nice().range([a, 0]); colorScale.domain(i), r.select(".x-axis").attr("transform", `translate(0,${a})`).transition().duration(500).call(d3.axisBottom(s)), r.select(".y-axis").transition().duration(500).call(d3.axisLeft(d)), r.select(".x-label").attr("x", n / 2).attr("y", a + margin.top).text("Salary Range (USD)"), r.select(".y-label").attr("y", -margin.left + 20).attr("x", -a / 2).text("Number of Employees"); const u = r.select(".bars").html(""); u.selectAll("g").data(l).enter().append("g").attr("fill", (t) => colorScale(t.key)).selectAll("rect").data((t) => t).enter().append("rect").attr("x", (t) => s(t.data.range)).attr("y", a).attr("height", 0).attr("width", s.bandwidth()).style("cursor", "pointer").on("mouseover", function (t, e) { const n = d3.select(this.parentNode).datum().key; showTooltip( t, `${n}<br>Range: ${e.data.range}<br>Count: ${e[1] - e[0]}` ); }).on("mouseout", hideTooltip).on("click", function (t, e) { t.stopPropagation(); const n = d3.select(this.parentNode).datum().key, a = e.data.range; if ( activeStackedBarFilter && activeStackedBarFilter.education === n && activeStackedBarFilter.range === a ) (activeStackedBarFilter = null), updateAllCharts(processedData); else { activeStackedBarFilter = { education: n, range: a }; const t = o.find((t) => t.label === a), i = processedData.filter( (e) => e.education === n && e.salary >= t.min && e.salary < t.max ); updateAllCharts(i); } }).transition().duration(500).delay((t, e) => 50 * e).attr("y", (t) => d(t[1])).attr("height", (t) => d(t[0]) - d(t[1])), u.selectAll("rect").attr("opacity", function (t) { if (!activeStackedBarFilter) return 0.9; const e = d3.select(this.parentNode).datum().key; return activeStackedBarFilter.range === t.data.range && activeStackedBarFilter.education === e ? 1 : 0.2; }); }
+    function createParallelCoordinates() { d3.select("#parallel-coordinates").html(""); const t = d3.select("#parallel-coordinates").node().getBoundingClientRect().width, e = t - margin.left - margin.right, n = 300 - margin.top - margin.bottom, a = ["age", "yearsExperience", "salary"], r = d3.select("#parallel-coordinates").append("svg").attr("width", t).attr("height", 300).append("g").attr("transform", `translate(${margin.left},${margin.top})`); a.forEach((t) => { y[t] = d3.scaleLinear().domain(d3.extent(processedData, (e) => e[t])).nice().range([n, 0]); }); const o = d3.scalePoint().domain(a).range([0, e]); r.append("g").selectAll("path").data(processedData, (t) => t.id).enter().append("path").attr("class", "line").attr("d", (t) => d3.line()(a.map((e) => [o(e), y[e](t[e])]))).attr("stroke", (t) => colorScale(t.gender)).attr("stroke-opacity", 0).attr("fill", "none").transition().duration(500).attr("stroke-opacity", 0.5), r.selectAll(".axis-parallel").data(a).enter().append("g").attr("class", "axis-parallel axis").attr("transform", (t) => `translate(${o(t)},0)`).each(function (t) { d3.select(this).call(d3.axisLeft(y[t])); }).append("text").style("text-anchor", "middle").attr("y", -9).style("fill", "#333").text((t) => "yearsExperience" === t ? "Experience" : "age" === t ? "Age" : "Salary"), r.selectAll(".axis-parallel").append("g").attr("class", "brush").each(function (t) { d3.select(this).call( (y[t].brush = d3.brushY().extent([[-10, 0], [10, n],]).on("brush end", function () { const t = new Map(); r.selectAll(".brush").filter(function (t) { return d3.brushSelection(this); }).each(function (t) { selections.set(d,d3.brushSelection(this).map(y[d].invert)); }); const e = processedData.filter((t) => Array.from(selections.entries()).every( ([e, [n, a]]) => t[e] >= a && t[e] <= n ) ); updateAllCharts(e); })) ); }), updateParallelCoordinates(); }
+    function updateParallelCoordinates() { const t = new Set(activeSelection.map((t) => t.id)); d3.select("#parallel-coordinates").selectAll(".line").transition().duration(300).attr("stroke-opacity", (e) => (t.has(e.id) ? 0.7 : 0.05)).attr("stroke-width", (e) => (t.has(e.id) ? 1.5 : 1)); }
     </script>
 </body>
 </html>
