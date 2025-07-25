@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecto Avanzado de Visualización de Datos - Análisis Salarial</title>
+    <title>Advanced Data Visualization Project - Salary Analysis</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- Estructura y Tema General --- */
+        /* --- General Structure and Theme --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,7 +28,7 @@
         .header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
         .authors { font-size: 1.1rem; color: #555; font-style: italic; }
         
-        /* --- Estilos de las Secciones y Contenedores --- */
+        /* --- Section and Container Styles --- */
         .section {
             background: rgba(36, 59, 85, 0.7);
             margin: 2rem 0;
@@ -52,7 +52,7 @@
         }
         .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
 
-        /* --- Estilos de los Gráficos y Texto --- */
+        /* --- Chart and Text Styles --- */
         .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
         .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
         .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
@@ -61,13 +61,13 @@
         .axis .tick text { fill: #333; }
         .dot { transition: opacity 0.3s, transform 0.3s, r 0.3s; }
         
-        /* --- Controles e Interactividad --- */
+        /* --- Controls and Interactivity --- */
         .controls { text-align: center; margin-bottom: 1rem; }
         .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
         .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
         .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
         
-        /* Controles para gráfica personalizable */
+        /* Controls for customizable chart */
         .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
         .custom-chart-controls select {
@@ -79,89 +79,89 @@
             font-size: 0.9rem;
         }
 
-        /* --- Mensajes de Estado y Animación de Carga --- */
+        /* --- Status Messages and Loading Animation --- */
         .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
         .error-message { color: #ff6b6b; }
         .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- Tabla de Resumen --- */
+        /* --- Summary Table --- */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
         .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
         .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
         .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
         
-        /* --- Leyenda Interactiva --- */
+        /* --- Interactive Legend --- */
         .legend-item { cursor: pointer; }
         .legend-item.hidden { opacity: 0.5; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1><i class="fas fa-chart-bar"></i> PROYECTO AVANZADO DE VISUALIZACIÓN DE DATOS</h1>
+        <h1><i class="fas fa-chart-bar"></i> ADVANCED DATA VISUALIZATION PROJECT</h1>
         <div class="authors">Sergio Barrera • Ariel Buenfil • Damaris Dzul • Diego Monroy • Alan Valbuena</div>
     </div>
 
     <div class="container">
-        <div id="loading" class="status-message"><div class="loader"></div><p style="margin-top: 1rem;">Cargando Datos...</p></div>
+        <div id="loading" class="status-message"><div class="loader"></div><p style="margin-top: 1rem;">Loading Data...</p></div>
         <div id="error" class="status-message error-message" style="display: none;"></div>
 
         <div id="content" style="display: none;">
             <div class="section">
-                <h2 class="section-title">Resumen General de los Datos</h2>
+                <h2 class="section-title">General Data Overview</h2>
                 <div id="data-summary" class="summary-grid"></div>
             </div>
             
-            <div class="controls"><button id="resetButton" class="reset-btn"><i class="fas fa-sync-alt"></i> Reiniciar Filtros</button></div>
+            <div class="controls"><button id="resetButton" class="reset-btn"><i class="fas fa-sync-alt"></i> Reset Filters</button></div>
 
             <div class="section">
-                <h2 class="section-title">Análisis Interactivo Vinculado</h2>
+                <h2 class="section-title">Linked Interactive Analysis</h2>
                 <div class="charts-grid">
                     <div class="chart-container">
-                        <div class="chart-title">Salario vs. Experiencia (Leyenda Interactiva)</div>
-                        <p class="chart-description">Analiza la correlación entre experiencia y salario. <b>Interactúa:</b> Dibuja un rectángulo o haz clic en la leyenda.</p>
+                        <div class="chart-title">Salary vs. Experience (Interactive Legend)</div>
+                        <p class="chart-description">Analyze the correlation between experience and salary. <b>Interact:</b> Draw a rectangle or click on the legend.</p>
                         <div id="scatter-experience"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Composición Educativa por Rango Salarial</div>
-                        <p class="chart-description">Observa qué nivel educativo predomina en cada rango. <b>Interactúa:</b> Haz clic en un segmento para filtrar.</p>
+                        <div class="chart-title">Educational Composition by Salary Range</div>
+                        <p class="chart-description">See which educational level predominates in each range. <b>Interact:</b> Click a segment to filter.</p>
                         <div id="stacked-bar"></div>
                     </div>
                 </div>
             </div>
             
             <div class="section">
-                <h2 class="section-title">Análisis de Distribución y Composición</h2>
+                <h2 class="section-title">Distribution and Composition Analysis</h2>
                 <div class="charts-grid">
                     <div class="chart-container">
-                        <div class="chart-title">Los 10 Puestos con Mejor Salario</div>
-                        <p class="chart-description">Identifica los roles más lucrativos basados en el salario promedio.</p>
+                        <div class="chart-title">Top 10 Highest Paying Jobs</div>
+                        <p class="chart-description">Identify the most lucrative roles based on average salary.</p>
                         <div id="top-jobs-chart"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Distribución por Género</div>
-                        <p class="chart-description">Proporción de empleados por género en el conjunto de datos.</p>
+                        <div class="chart-title">Distribution by Gender</div>
+                        <p class="chart-description">Proportion of employees by gender in the dataset.</p>
                         <div id="gender-donut"></div>
                     </div>
                     <div class="chart-container">
-                        <div class="chart-title">Distribución por Nivel Educativo</div>
-                        <p class="chart-description">Proporción de empleados por nivel de educación.</p>
+                        <div class="chart-title">Distribution by Education Level</div>
+                        <p class="chart-description">Proportion of employees by education level.</p>
                         <div id="education-donut"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- ========= GRÁFICA PERSONALIZABLE (MOVIDA AL FINAL) ========= -->
+            <!-- ========= CUSTOMIZABLE CHART (MOVED TO THE END) ========= -->
             <div class="section">
-                <h2 class="section-title">Análisis Personalizado</h2>
+                <h2 class="section-title">Custom Analysis</h2>
                 <div class="charts-grid" style="grid-template-columns: 1fr;">
                     <div class="chart-container">
-                        <div class="chart-title">Gráfica Personalizable</div>
-                        <p class="chart-description">Selecciona dos variables numéricas para explorar su relación.</p>
+                        <div class="chart-title">Customizable Chart</div>
+                        <p class="chart-description">Select two numerical variables to explore their relationship.</p>
                         <div class="custom-chart-controls">
-                            <label for="x-axis-select">Eje X:</label>
+                            <label for="x-axis-select">X-Axis:</label>
                             <select id="x-axis-select"></select>
-                            <label for="y-axis-select">Eje Y:</label>
+                            <label for="y-axis-select">Y-Axis:</label>
                             <select id="y-axis-select"></select>
                         </div>
                         <div id="customizable-chart"></div>
@@ -175,7 +175,7 @@
 
     <script>
     // =================================================================================
-    // --- VARIABLES GLOBALES Y CONFIGURACIÓN ---
+    // --- GLOBAL VARIABLES AND CONFIGURATION ---
     // =================================================================================
     let processedData = [];
     let activeSelection = [];
@@ -186,6 +186,9 @@
     let activeStackedBarFilter = null;
     let hiddenGroups = new Set();
 
+    // =================================================================================
+    // --- DO NOT MOVE THIS SECTION ---
+    // =================================================================================
     const csvFilePath = "./Salary_Data.csv"; 
 
     const columnMapping = {
@@ -197,9 +200,6 @@
         salary: "Salary"
     };
 
-    // =================================================================================
-    // --- CARGA DE DATOS E INICIALIZACIÓN ---
-    // =================================================================================
     document.addEventListener('DOMContentLoaded', () => { loadData(); });
 
     function loadData() {
@@ -207,8 +207,8 @@
             processRawData(data);
             initializeDashboard();
         }).catch(error => {
-            console.error("Error de D3:", error);
-            showError(`No se pudo cargar el archivo desde "${csvFilePath}".<br>Verifica la ruta y el nombre del archivo.`);
+            console.error("D3 Error:", error);
+            showError(`Could not load the file from "${csvFilePath}".<br>Please check the file path and name.`);
         });
     }
 
@@ -230,11 +230,14 @@
         }).filter(d => d !== null && d.salary > 0);
         
         if (processedData.length === 0) {
-            throw new Error("No se procesaron datos válidos.");
+            throw new Error("No valid data was processed.");
         }
         
         activeSelection = [...processedData];
     }
+    // =================================================================================
+    // --- END OF THE SECTION NOT TO BE MOVED ---
+    // =================================================================================
 
     function initializeDashboard() {
         d3.select("#loading").style("display", "none");
@@ -251,7 +254,7 @@
     }
     
     // =================================================================================
-    // --- FUNCIONES DE UTILIDAD ---
+    // --- UTILITY FUNCTIONS ---
     // =================================================================================
     function showError(message) { d3.select("#loading").style("display", "none"); d3.select("#error").style("display", "block").html(`<i class="fas fa-exclamation-triangle"></i> ${message}`); }
     function showTooltip(event, text) { tooltip.transition().duration(200).style("opacity", .9); tooltip.html(text).style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 28}px`); }
@@ -283,7 +286,7 @@
     }
 
     // =================================================================================
-    // --- LÓGICA PRINCIPAL DE GRÁFICOS ---
+    // --- MAIN CHART LOGIC ---
     // =================================================================================
     function updateAllCharts(data, fullReset = false) {
         activeSelection = fullReset ? processedData : data;
@@ -303,17 +306,17 @@
     }
     
     // =================================================================================
-    // --- VISUALIZACIONES ---
+    // --- VISUALIZATIONS ---
     // =================================================================================
     
     function createSummaryTable(data) {
         d3.select("#data-summary").html("");
         const formatCurrency = d3.format("$,.0f");
         const summaryData = [
-            { label: "Empleados Totales", value: data.length },
-            { label: "Salario Promedio", value: formatCurrency(d3.mean(data, d => d.salary)) },
-            { label: "Salario Mediano", value: formatCurrency(d3.median(data, d => d.salary)) },
-            { label: "Edad Promedio", value: d3.mean(data, d => d.age).toFixed(1) }
+            { label: "Total Employees", value: data.length },
+            { label: "Average Salary", value: formatCurrency(d3.mean(data, d => d.salary)) },
+            { label: "Median Salary", value: formatCurrency(d3.median(data, d => d.salary)) },
+            { label: "Average Age", value: d3.mean(data, d => d.age).toFixed(1) }
         ];
         d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
             .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
@@ -341,10 +344,9 @@
             .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
     }
 
-    // --- GRÁFICA DE TOP 10 PUESTOS (CORREGIDA) ---
+    // --- TOP 10 JOBS CHART ---
     function createTopJobsChart(data) {
         d3.select("#top-jobs-chart").html("");
-        // CORRECCIÓN: Se cambió d.avgSalary por d.salary en el cálculo de la media.
         const avgSalaryByJob = Array.from(
             d3.group(data, d => d.jobTitle), 
             ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salary) })
@@ -368,11 +370,11 @@
         svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
         
         svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth()).attr("x", 0).attr("width", 0)
-            .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Salario Prom.: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
+            .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
             .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
     }
     
-    // --- GRÁFICAS INTERACTIVAS ---
+    // --- INTERACTIVE CHARTS ---
     function createScatterExperience(){
         d3.select("#scatter-experience").html("");
         const containerNode = d3.select("#scatter-experience").node();
@@ -388,8 +390,8 @@
 
         svg.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
         svg.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y_scale).tickFormat(d => `$${d/1000}K`));
-        svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Años de Experiencia");
-        svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 20).attr("x", -height / 2).text("Salario (USD)");
+        svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Years of Experience");
+        svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 20).attr("x", -height / 2).text("Salary (USD)");
         
         svg.append("g").attr("class", "dots-container").selectAll("circle").data(processedData, d => d.id)
             .enter().append("circle").attr("class", "dot")
@@ -426,7 +428,7 @@
     function updateScatterExperience(){
         const activeIds = new Set(activeSelection.map(d => d.id));
         d3.select("#scatter-experience").selectAll(".dot")
-            .on("mouseover", (e, d) => showTooltip(e, `Exp: ${d.yearsExperience} años<br>Salario: $${d.salary.toLocaleString()}<br>Género: ${d.gender}`))
+            .on("mouseover", (e, d) => showTooltip(e, `Exp: ${d.yearsExperience} years<br>Salary: $${d.salary.toLocaleString()}<br>Gender: ${d.gender}`))
             .on("mouseout", hideTooltip)
             .transition().duration(300)
             .attr("fill", d => colorScale(d.gender))
@@ -481,8 +483,8 @@
 
         svg.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(300).call(d3.axisBottom(xScale));
         svg.select(".y-axis").transition().duration(300).call(d3.axisLeft(yScale));
-        svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Rango Salarial (USD)");
-        svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height/2).text("Número de Empleados");
+        svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)");
+        svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height/2).text("Number of Employees");
 
         const barGroups = svg.select(".bars").selectAll("g").data(series);
         barGroups.enter().append("g").merge(barGroups).attr("fill", d => colorScale(d.key));
@@ -491,7 +493,7 @@
         rects.enter().append("rect").merge(rects)
             .attr("x", d => xScale(d.data.range)).attr("width", xScale.bandwidth())
             .style("cursor", "pointer")
-            .on("mouseover",function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Rango: ${d.data.range}<br>Total: ${d[1]-d[0]}`);})
+            .on("mouseover",function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Range: ${d.data.range}<br>Total: ${d[1]-d[0]}`);})
             .on("mouseout",hideTooltip)
             .on("click", function(event, d){
                 event.stopPropagation();
@@ -519,10 +521,10 @@
         });
     }
 
-    // --- GRÁFICA PERSONALIZABLE (CORREGIDA Y ACTUALIZADA) ---
+    // --- CUSTOMIZABLE CHART ---
     function createCustomizableChart() {
         const numericalColumns = ["age", "yearsExperience", "salary"];
-        const columnLabels = { "age": "Edad", "yearsExperience": "Años de Experiencia", "salary": "Salario" };
+        const columnLabels = { "age": "Age", "yearsExperience": "Years of Experience", "salary": "Salary" };
 
         const xSelect = d3.select("#x-axis-select");
         const ySelect = d3.select("#y-axis-select");
@@ -564,7 +566,7 @@
         
         const xVar = d3.select("#x-axis-select").property("value");
         const yVar = d3.select("#y-axis-select").property("value");
-        const columnLabels = { "age": "Edad", "yearsExperience": "Años de Experiencia", "salary": "Salario" };
+        const columnLabels = { "age": "Age", "yearsExperience": "Years of Experience", "salary": "Salary" };
 
         const width = d3.select(`${containerId} svg`).attr("width") - margin.left - margin.right;
         const height = d3.select(`${containerId} svg`).attr("height") - margin.top - margin.bottom;
@@ -572,11 +574,9 @@
         const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
         const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
 
-        // CORRECCIÓN: Se asegura que el eje X se dibuje abajo.
         svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(500).call(d3.axisBottom(x));
         svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y_scale).tickFormat(d => yVar === 'salary' ? `$${d/1000}K` : d));
 
-        // CORRECCIÓN: Se asegura que el título del eje X esté abajo.
         svg.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
         svg.select(".y-label").attr("y", -margin.left + 20).attr("x", -height / 2).text(columnLabels[yVar]);
 
