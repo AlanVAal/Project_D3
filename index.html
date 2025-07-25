@@ -127,7 +127,6 @@
                 </div>
             </div>
             
-            <!-- NEW CUSTOM CHART SECTION -->
             <div class="section">
                 <h2 class="section-title">Build Your Own Chart</h2>
                 <div class="chart-container">
@@ -179,17 +178,28 @@
     let activeStackedBarFilter = null;
     let hiddenGroups = new Set();
 
-    // --- CRITICAL CONFIGURATION ---
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!  CRITICAL CONFIGURATION !!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //
+    // 1. CSV FILE PATH:
+    //    This must EXACTLY match your file's name in the GitHub repository.
+    //    GitHub is case-sensitive. Using "./" is a best practice.
+    //
     const csvFilePath = "./Salary_Data.csv"; 
+
+    // 2. COLUMN MAPPING:
+    //    The values here MUST EXACTLY match the headers in your CSV file.
+    //    I have now corrected them based on your list.
+    //
     const columnMapping = {
         age: "Age",
         gender: "Gender",
-        education: "Education Level",
-        jobTitle: "Job Title",
-        experience: "Years of Experience",
+        education: "Education Level", // Corrected to include the space
+        jobTitle: "Job Title",       // Corrected to include the space
+        experience: "Years of Experience", // Corrected to include spaces
         salary: "Salary"
     };
-    
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     // =================================================================================
     // --- DATA LOADING & INITIALIZATION ---
     // =================================================================================
@@ -198,6 +208,7 @@
     function loadData() {
         d3.csv(csvFilePath).then(data => {
             processRawData(data);
+            console.log("First processed row:", processedData[0]); // For debugging, check console (F12)
             initializeDashboard();
         }).catch(error => {
             showError(`Failed to load data from "${csvFilePath}".<br>Please check:<br>1. The filename in the code is an exact, case-sensitive match.<br>2. The column names in the 'columnMapping' object are exact matches to your CSV headers.`);
@@ -213,11 +224,13 @@
             jobTitle: row[columnMapping.jobTitle] || 'N/A',
             yearsExperience: +row[columnMapping.experience] || 0,
             salary: +row[columnMapping.salary] || 0
-        })).filter(d => d.salary > 0 && d.gender !== 'N/A' && d.jobTitle);
+        })).filter(d => d.salary > 0 && d.age > 0 && d.jobTitle !== 'N/A');
         
         if (processedData.length === 0) {
-            throw new Error("No valid data was processed. Check your column mappings and CSV content.");
+            // This error will trigger if mapping fails and no valid rows are created.
+            throw new Error("No valid data was processed. Please double-check your 'columnMapping' object against the CSV headers.");
         }
+        
         activeSelection = [...processedData];
     }
 
@@ -280,7 +293,27 @@
             .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
     }
     
-    function createDonutChart(containerId, groupByKey) { /* ... (code from previous step, remains the same) ... */ }
+    function createDonutChart(containerId, groupByKey) {
+        const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
+        const containerNode = d3.select(containerId).node();
+        if(!containerNode) return;
+        const width = containerNode.getBoundingClientRect().width;
+        const height = 300;
+        const radius = Math.min(width, height) / 2 - 20;
+        const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
+            .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
+        const pie = d3.pie().value(d => d.value).sort(null);
+        const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
+        svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
+            .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
+            .style("transition", "opacity 0.3s, transform 0.3s")
+            .on("mouseover", function(event, d) {
+                d3.select(this).style("transform", "scale(1.05)");
+                const percent = (d.data.value / processedData.length * 100).toFixed(1);
+                showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value} employees (${percent}%)`);
+            })
+            .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
+    }
     
     function createTopJobsChart(data) {
         const containerId = "#top-jobs-chart";
@@ -295,7 +328,7 @@
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
         const height = 300;
         const svg = d3.select(containerId).append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-        const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]);
+        const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]).nice();
         const y = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
         svg.append("g").call(d3.axisLeft(y));
         svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
@@ -304,14 +337,14 @@
             .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
     }
     
-    const y = {}; 
+    const y = {};
     function createScatterExperience() {
         d3.select("#scatter-experience").html("");
-        const margin = { top: 20, right: 20, bottom: 100, left: 70 }; // Adjusted bottom margin for legend
+        const margin = { top: 20, right: 20, bottom: 100, left: 70 }; // Adjusted for legend
         const containerWidth = d3.select("#scatter-experience").node().getBoundingClientRect().width;
         const width = containerWidth - margin.left - margin.right;
         const height = 350 - margin.top - margin.bottom;
-        const svg = d3.select("#scatter-experience").append("svg").attr("width", containerWidth).attr("height", 350 + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        const svg = d3.select("#scatter-experience").append("svg").attr("width", containerWidth).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
         const x = d3.scaleLinear().domain(d3.extent(processedData, d => d.yearsExperience)).nice().range([0, width]);
         const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d.salary)).nice().range([height, 0]);
         svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
@@ -323,7 +356,7 @@
         
         // **FIX:** Moved legend to below the chart
         const groups = [...new Set(processedData.map(d => d.gender))];
-        const legend = svg.append("g").attr("transform", `translate(${width / 2 - groups.length * 50}, ${height + 70})`);
+        const legend = svg.append("g").attr("transform", `translate(${(width - groups.length * 100) / 2}, ${height + 60})`);
         groups.forEach((group, i) => {
             const legendItem = legend.append("g").attr("class", "legend-item").attr("transform", `translate(${i * 100}, 0)`).on("click", function() {
                 hiddenGroups.has(group) ? hiddenGroups.delete(group) : hiddenGroups.add(group);
@@ -333,20 +366,26 @@
             legendItem.append("text").attr("x", 20).attr("y", 12).text(group).style("fill", "#333");
         });
 
-        const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => { /* ... (unchanged) ... */ });
+        const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => {
+            if (!event.selection) { if (event.sourceEvent) updateAllCharts(processedData); return; }
+            const [[x0, y0], [x1, y1]] = event.selection;
+            const selected = processedData.filter(d => x(d.yearsExperience) >= x0 && x(d.yearsExperience) <= x1 && y_scale(d.salary) >= y0 && y_scale(d.salary) <= y1);
+            updateAllCharts(selected);
+        });
         svg.append("g").attr("class", "brush").call(brush);
         updateScatterExperience();
     }
     
     // --- CUSTOM CHART GENERATOR ---
     function populateCustomChartSelectors() {
+        // Use the human-readable keys from columnMapping for dropdowns
         const columns = Object.keys(columnMapping);
         const xSelect = d3.select("#x-axis-select");
         const ySelect = d3.select("#y-axis-select");
 
         columns.forEach(col => {
-            xSelect.append("option").attr("value", col).text(col);
-            ySelect.append("option").attr("value", col).text(col);
+            xSelect.append("option").attr("value", col).text(columnMapping[col]);
+            ySelect.append("option").attr("value", col).text(columnMapping[col]);
         });
     }
 
@@ -359,14 +398,15 @@
             return;
         }
 
-        d3.select("#custom-chart").html(""); // Clear previous chart
+        d3.select("#custom-chart").html("");
         const container = d3.select("#custom-chart");
-        const margin = { top: 20, right: 30, bottom: 60, left: 70 };
+        const margin = { top: 20, right: 30, bottom: 60, left: 150 };
         const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
         const height = 300 - margin.top - margin.bottom;
         const svg = container.append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
             .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
         
+        // Determine data type based on the first row of processed data
         const xType = typeof processedData[0][xVar];
         const yType = typeof processedData[0][yVar];
 
@@ -375,23 +415,72 @@
         } else if (xType === 'string' && yType === 'number') {
             drawCustomBar(svg, width, height, xVar, yVar);
         } else if (xType === 'number' && yType === 'string') {
-            drawCustomBar(svg, width, height, yVar, xVar, true); // Swapped, horizontal
+            drawCustomBar(svg, width, height, yVar, xVar, true);
         } else {
             drawCustomBubble(svg, width, height, xVar, yVar);
         }
     }
 
-    function drawCustomScatter(svg, width, height, xVar, yVar) { /* ... (draws a scatter plot, code omitted for brevity) ... */ }
-    function drawCustomBar(svg, width, height, catVar, numVar, isHorizontal = false) { /* ... (draws a bar chart, code omitted for brevity) ... */ }
-    function drawCustomBubble(svg, width, height, xVar, yVar) { /* ... (draws a bubble chart, code omitted for brevity) ... */ }
+    function drawCustomScatter(svg, width, height, xVar, yVar) {
+        const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
+        const y = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
+        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        svg.append("g").call(d3.axisLeft(y));
+        svg.append("g").selectAll("circle").data(processedData).enter().append("circle")
+            .attr("cx", d => x(d[xVar])).attr("cy", d => y(d[yVar])).attr("r", 3)
+            .attr("fill", "#4a90e2").attr("opacity", 0.6);
+    }
     
-    // Minified versions of remaining functions to save space
-    function updateScatterExperience(t){const e=new Set(activeSelection.map(t=>t.id));d3.select("#scatter-experience").selectAll(".dot").transition().duration(300).attr("opacity",n=>e.has(n.id)&&!hiddenGroups.has(n.gender)?.8:.05).attr("r",n=>e.has(n.id)&&!hiddenGroups.has(n.gender)?5:0).style("stroke",n=>e.has(n.id)&&!hiddenGroups.has(n.gender)?"black":"none").style("stroke-width",1),d3.selectAll("#scatter-experience .legend-item").classed("hidden",t=>hiddenGroups.has(d3.select(this).text()))}
-    function createStackedBarChart(){d3.select("#stacked-bar").html("");const t=d3.select("#stacked-bar").node().getBoundingClientRect().width,e=d3.select("#stacked-bar").append("svg").attr("width",t).attr("height",300).append("g").attr("transform",`translate(${margin.left},${margin.top})`);e.append("g").attr("class","x-axis axis"),e.append("g").attr("class","y-axis axis"),e.append("g").attr("class","bars"),e.append("text").attr("class","x-label").attr("text-anchor","middle"),e.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)"),updateStackedBarChart()}
-    function updateStackedBarChart(){const t=d3.select("#stacked-bar").node();if(!t)return;const e={top:40,right:30,bottom:80,left:70},n=t.getBoundingClientRect().width,a=n-e.left-e.right,r=300-e.top-e.bottom;d3.select("#stacked-bar svg").attr("width",n);const o=d3.select("#stacked-bar svg g"),i=[{min:0,max:5e4,label:"0-50K"},{min:50001,max:1e5,label:"50-100K"},{min:100001,max:15e4,label:"100-150K"},{min:150001,max:1/0,label:"150K+"}],c=[...new Set(processedData.map(t=>t.education))].sort(),l=i.map(t=>{const e={range:t.label};return c.forEach(n=>{e[n]=activeSelection.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max).length}),e}),s=d3.stack().keys(c)(l),d=d3.scaleBand().domain(i.map(t=>t.label)).range([0,a]).padding(.2),u=d3.scaleLinear().domain([0,d3.max(s,t=>d3.max(t,t=>t[1]))||10]).nice().range([r,0]);colorScale.domain(c),o.select(".x-axis").attr("transform",`translate(0,${r})`).transition().duration(500).call(d3.axisBottom(d)),o.select(".y-axis").transition().duration(500).call(d3.axisLeft(u)),o.select(".x-label").attr("x",a/2).attr("y",r+e.top+10).text("Salary Range (USD)"),o.select(".y-label").attr("y",-e.left+20).attr("x",-r/2).text("Number of Employees");const p=o.select(".bars").html("");p.selectAll("g").data(s).enter().append("g").attr("fill",t=>colorScale(t.key)).selectAll("rect").data(t=>t).enter().append("rect").attr("x",t=>d(t.data.range)).attr("y",r).attr("height",0).attr("width",d.bandwidth()).style("cursor","pointer").on("mouseover",function(t,e){const n=d3.select(this.parentNode).datum().key;showTooltip(t,`${n}<br>Range: ${e.data.range}<br>Count: ${e[1]-e[0]}`)}).on("mouseout",hideTooltip).on("click",function(t,e){t.stopPropagation();const n=d3.select(this.parentNode).datum().key,a=e.data.range;if(activeStackedBarFilter&&activeStackedBarFilter.education===n&&activeStackedBarFilter.range===a)activeStackedBarFilter=null,updateAllCharts(processedData);else{activeStackedBarFilter={education:n,range:a};const t=i.find(t=>t.label===a),c=processedData.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max);updateAllCharts(c)}}).transition().duration(500).delay((t,e)=>50*e).attr("y",t=>u(t[1])).attr("height",t=>u(t[0])-u(t[1])),p.selectAll("rect").attr("opacity",function(t){if(!activeStackedBarFilter)return.9;const e=d3.select(this.parentNode).datum().key;return activeStackedBarFilter.range===t.data.range&&activeStackedBarFilter.education===e?1:.2})}
-    function createParallelCoordinates(){d3.select("#parallel-coordinates").html("");const t={top:40,right:30,bottom:80,left:70},e=d3.select("#parallel-coordinates").node().getBoundingClientRect().width,n=e-t.left-t.right,a=300-t.top-t.bottom,r=["age","yearsExperience","salary"],o=d3.select("#parallel-coordinates").append("svg").attr("width",e).attr("height",300).append("g").attr("transform",`translate(${t.left},${t.top})`);r.forEach(t=>{y[t]=d3.scaleLinear().domain(d3.extent(processedData,e=>e[t])).nice().range([a,0])});const i=d3.scalePoint().domain(r).range([0,n]);o.append("g").selectAll("path").data(processedData,t=>t.id).enter().append("path").attr("class","line").attr("d",t=>d3.line()(r.map(e=>[i(e),y[e](t[e])]))).attr("stroke",t=>colorScale(t.gender)).attr("stroke-opacity",0).attr("fill","none").transition().duration(500).attr("stroke-opacity",.5),o.selectAll(".axis-parallel").data(r).enter().append("g").attr("class","axis-parallel axis").attr("transform",t=>`translate(${i(t)},0)`).each(function(t){d3.select(this).call(d3.axisLeft(y[t]))}).append("text").style("text-anchor","middle").attr("y",-9).style("fill","#333").text(t=>"yearsExperience"===t?"Experience":"age"===t?"Age":"Salary"),o.selectAll(".axis-parallel").append("g").attr("class","brush").each(function(t){d3.select(this).call(y[t].brush=d3.brushY().extent([[-10,0],[10,a]]).on("brush end",function(){const t=new Map;o.selectAll(".brush").filter(function(t){return d3.brushSelection(this)}).each(function(t){t=d3.brushSelection(this).map(y[t].invert),selections.set(d,t)});const e=processedData.filter(t=>Array.from(selections.entries()).every(([e,[n,a]])=>t[e]>=a&&t[e]<=n));updateAllCharts(e)}))}),updateParallelCoordinates()}
+    function drawCustomBar(svg, width, height, catVar, numVar, isHorizontal = false) {
+        const groupedData = Array.from(d3.group(processedData, d => d[catVar]), ([key, value]) => ({
+            key: key,
+            value: d3.mean(value, d => d[numVar])
+        })).sort((a,b) => b.value - a.value).slice(0,20); // Limit to top 20 for readability
+
+        if(isHorizontal) {
+            const x = d3.scaleLinear().domain([0, d3.max(groupedData, d => d.value)]).nice().range([0, width]);
+            const y = d3.scaleBand().domain(groupedData.map(d => d.key)).range([0, height]).padding(0.1);
+            svg.append("g").call(d3.axisLeft(y));
+            svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+            svg.selectAll("rect").data(groupedData).enter().append("rect")
+                .attr("y", d => y(d.key)).attr("height", y.bandwidth()).attr("x", 0).attr("width", d => x(d.value))
+                .attr("fill", "#4a90e2");
+        } else {
+            const x = d3.scaleBand().domain(groupedData.map(d => d.key)).range([0, width]).padding(0.1);
+            const y = d3.scaleLinear().domain([0, d3.max(groupedData, d => d.value)]).nice().range([height, 0]);
+            svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "rotate(-45)").style("text-anchor", "end");
+            svg.append("g").call(d3.axisLeft(y));
+            svg.selectAll("rect").data(groupedData).enter().append("rect")
+                .attr("x", d => x(d.key)).attr("width", x.bandwidth()).attr("y", d => y(d.value)).attr("height", d => height - y(d.value))
+                .attr("fill", "#4a90e2");
+        }
+    }
+
+    function drawCustomBubble(svg, width, height, xVar, yVar) {
+        const counts = d3.rollup(processedData, v => v.length, d => d[xVar], d => d[yVar]);
+        const data = [];
+        counts.forEach((yMap, xKey) => { yMap.forEach((count, yKey) => { data.push({ x: xKey, y: yKey, count: count }); }); });
+        
+        const x = d3.scaleBand().domain([...new Set(data.map(d => d.x))]).range([0, width]).padding(0.5);
+        const y = d3.scaleBand().domain([...new Set(data.map(d => d.y))]).range([height, 0]).padding(0.5);
+        const size = d3.scaleSqrt().domain([0, d3.max(data, d => d.count)]).range([1, 25]);
+
+        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).selectAll("text").attr("transform", "rotate(-45)").style("text-anchor", "end");
+        svg.append("g").call(d3.axisLeft(y));
+        svg.selectAll("circle").data(data).enter().append("circle")
+            .attr("cx", d => x(d.x)).attr("cy", d => y(d.y)).attr("r", d => size(d.count))
+            .attr("fill", "#4a90e2").attr("opacity", 0.7)
+            .on("mouseover", (e, d) => showTooltip(e, `<b>${xVar}:</b> ${d.x}<br><b>${yVar}:</b> ${d.y}<br><b>Count:</b> ${d.count}`))
+            .on("mouseout", hideTooltip);
+    }
+    
+    // --- Remaining Charting Functions (Full Code) ---
+    function updateScatterExperience(isLegendClick){const selectionIds=new Set(activeSelection.map(d=>d.id));d3.select("#scatter-experience").selectAll(".dot").transition().duration(300).attr("opacity",d=>selectionIds.has(d.id)&&!hiddenGroups.has(d.gender)?.8:.05).attr("r",d=>selectionIds.has(d.id)&&!hiddenGroups.has(d.gender)?5:0).style("stroke",d=>selectionIds.has(d.id)&&!hiddenGroups.has(d.gender)?"black":"none").style("stroke-width",1),d3.selectAll("#scatter-experience .legend-item").classed("hidden",d=>hiddenGroups.has(d))}
+    function createStackedBarChart(){d3.select("#stacked-bar").html("");const t=d3.select("#stacked-bar").node().getBoundingClientRect().width,e=d3.select("#stacked-bar").append("svg").attr("width",t).attr("height",300).append("g").attr("transform",`translate(70,40)`);e.append("g").attr("class","x-axis axis"),e.append("g").attr("class","y-axis axis"),e.append("g").attr("class","bars"),e.append("text").attr("class","x-label").attr("text-anchor","middle"),e.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)"),updateStackedBarChart()}
+    function updateStackedBarChart(){const t=d3.select("#stacked-bar").node();if(!t)return;const e={top:40,right:30,bottom:80,left:70},n=t.getBoundingClientRect().width,a=n-e.left-e.right,r=300-e.top-e.bottom;d3.select("#stacked-bar svg").attr("width",n);const o=d3.select("#stacked-bar svg g"),i=[{min:0,max:5e4,label:"0-50K"},{min:50001,max:1e5,label:"50-100K"},{min:100001,max:15e4,label:"100-150K"},{min:150001,max:1/0,label:"150K+"}],c=[...new Set(processedData.map(t=>t.education))].sort(),l=i.map(t=>{const e={range:t.label};return c.forEach(n=>{e[n]=activeSelection.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max).length}),e}),s=d3.stack().keys(c)(l),d=d3.scaleBand().domain(i.map(t=>t.label)).range([0,a]).padding(.2),u=d3.scaleLinear().domain([0,d3.max(s,t=>d3.max(t,t=>t[1]))||10]).nice().range([r,0]);colorScale.domain(c),o.select(".x-axis").attr("transform",`translate(0,${r})`).transition().duration(500).call(d3.axisBottom(d)),o.select(".y-axis").transition().duration(500).call(d3.axisLeft(u)),o.select(".x-label").attr("x",a/2).attr("y",r+e.top).text("Salary Range (USD)"),o.select(".y-label").attr("y",-e.left+20).attr("x",-r/2).text("Number of Employees");const p=o.select(".bars").html("");p.selectAll("g").data(s).enter().append("g").attr("fill",t=>colorScale(t.key)).selectAll("rect").data(t=>t).enter().append("rect").attr("x",t=>d(t.data.range)).attr("y",r).attr("height",0).attr("width",d.bandwidth()).style("cursor","pointer").on("mouseover",function(t,e){const n=d3.select(this.parentNode).datum().key;showTooltip(t,`${n}<br>Range: ${e.data.range}<br>Count: ${e[1]-e[0]}`)}).on("mouseout",hideTooltip).on("click",function(t,e){t.stopPropagation();const n=d3.select(this.parentNode).datum().key,a=e.data.range;if(activeStackedBarFilter&&activeStackedBarFilter.education===n&&activeStackedBarFilter.range===a)activeStackedBarFilter=null,updateAllCharts(processedData);else{activeStackedBarFilter={education:n,range:a};const t=i.find(t=>t.label===a),c=processedData.filter(e=>e.education===n&&e.salary>=t.min&&e.salary<t.max);updateAllCharts(c)}}).transition().duration(500).delay((t,e)=>50*e).attr("y",t=>u(t[1])).attr("height",t=>u(t[0])-u(t[1])),p.selectAll("rect").attr("opacity",function(t){if(!activeStackedBarFilter)return.9;const e=d3.select(this.parentNode).datum().key;return activeStackedBarFilter.range===t.data.range&&activeStackedBarFilter.education===e?1:.2})}
+    function createParallelCoordinates(){d3.select("#parallel-coordinates").html("");const t={top:40,right:30,bottom:80,left:70},e=d3.select("#parallel-coordinates").node().getBoundingClientRect().width,n=e-t.left-t.right,a=300-t.top-t.bottom,r=["age","yearsExperience","salary"],o=d3.select("#parallel-coordinates").append("svg").attr("width",e).attr("height",300).append("g").attr("transform",`translate(${t.left},${t.top})`);r.forEach(t=>{y[t]=d3.scaleLinear().domain(d3.extent(processedData,e=>e[t])).nice().range([a,0])});const i=d3.scalePoint().domain(r).range([0,n]);o.append("g").selectAll("path").data(processedData,t=>t.id).enter().append("path").attr("class","line").attr("d",t=>d3.line()(r.map(e=>[i(e),y[e](t[e])]))).attr("stroke",t=>colorScale(t.gender)).attr("stroke-opacity",0).attr("fill","none").transition().duration(500).attr("stroke-opacity",.5),o.selectAll(".axis-parallel").data(r).enter().append("g").attr("class","axis-parallel axis").attr("transform",t=>`translate(${i(t)},0)`).each(function(t){d3.select(this).call(d3.axisLeft(y[t]))}).append("text").style("text-anchor","middle").attr("y",-9).style("fill","#333").text(t=>"yearsExperience"===t?"Experience":"age"===t?"Age":"Salary"),o.selectAll(".axis-parallel").append("g").attr("class","brush").each(function(t){d3.select(this).call(y[t].brush=d3.brushY().extent([[-10,0],[10,a]]).on("brush end",function(t){const e=new Map;o.selectAll(".brush").filter(function(){return d3.brushSelection(this)}).each(function(t){e.set(t,d3.brushSelection(this).map(y[t].invert))});const n=processedData.filter(t=>Array.from(e.entries()).every(([e,[n,a]])=>t[e]>=a&&t[e]<=n));updateAllCharts(n)}))}),updateParallelCoordinates()}
     function updateParallelCoordinates(){const t=new Set(activeSelection.map(t=>t.id));d3.select("#parallel-coordinates").selectAll(".line").transition().duration(300).attr("stroke-opacity",e=>t.has(e.id)?.7:.05).attr("stroke-width",e=>t.has(e.id)?1.5:1)}
-    
+
     </script>
 </body>
 </html>
