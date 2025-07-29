@@ -93,6 +93,80 @@
         /* --- Interactive Legend --- */
         .legend-item { cursor: pointer; }
         .legend-item.hidden { opacity: 0.5; }
+        
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 992px) {
+            /* Para tabletas y escritorios pequeños */
+            .container {
+                padding: 0 1.5rem;
+            }
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            .section-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Para tabletas pequeñas y móviles grandes */
+            .charts-grid {
+                /* Ajusta minmax para permitir columnas individuales más pequeñas */
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+            .custom-chart-controls {
+                flex-direction: column; /* Apila los controles verticalmente */
+                gap: 0.8rem;
+            }
+            .summary-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Para la mayoría de los teléfonos móviles */
+            body {
+                padding-bottom: 1rem;
+            }
+            .container {
+                padding: 0 1rem; /* Reduce el padding en pantallas pequeñas */
+            }
+            .header {
+                padding: 1.5rem 1rem;
+            }
+            .header h1 {
+                font-size: 1.6rem; /* Reduce aún más para móviles */
+                letter-spacing: 1px;
+            }
+            .authors {
+                font-size: 0.9rem;
+            }
+            .section {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+            .section-title {
+                font-size: 1.4rem;
+            }
+            .charts-grid {
+                /* Asegura que sea siempre una sola columna en pantallas muy pequeñas */
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                 min-height: 420px; /* Reduce la altura mínima de los gráficos */
+            }
+            .summary-grid {
+                /* Diseño de dos columnas para el resumen en móviles */
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+            .summary-item .value {
+                font-size: 1.6rem;
+            }
+             .summary-item .label {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -251,6 +325,8 @@
         });
         
         createAllVisualizations();
+        // Redraw charts on window resize to ensure they fit correctly
+        window.addEventListener('resize', createAllVisualizations);
     }
     
     function showError(message) { d3.select("#loading").style("display", "none"); d3.select("#error").style("display", "block").html(`<i class="fas fa-exclamation-triangle"></i> ${message}`); }
@@ -357,6 +433,7 @@
         
         const job_margin = { top: 20, right: 30, bottom: 40, left: 200 };
         const containerNode = d3.select("#top-jobs-chart").node();
+        if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width - job_margin.left - job_margin.right;
         const height = 400 - job_margin.top - job_margin.bottom;
         
@@ -380,6 +457,7 @@
     function createScatterExperience(){
         d3.select("#scatter-experience").html("");
         const containerNode = d3.select("#scatter-experience").node();
+        if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
         const svg = d3.select("#scatter-experience").append("svg")
@@ -450,6 +528,7 @@
     function createStackedBarChart(){
         d3.select("#stacked-bar").html("");
         const containerNode = d3.select("#stacked-bar").node();
+        if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width;
         const svg = d3.select("#stacked-bar").append("svg").attr("width", width).attr("height", 450)
             .append("g").attr("transform",`translate(${margin.left},${margin.top})`);
@@ -537,6 +616,10 @@
         const xSelect = d3.select("#x-axis-select");
         const ySelect = d3.select("#y-axis-select");
 
+        // Clear previous options before adding new ones
+        xSelect.html("");
+        ySelect.html("");
+
         numericalColumns.forEach(col => {
             xSelect.append("option").attr("value", col).text(columnLabels[col]);
             ySelect.append("option").attr("value", col).text(columnLabels[col]);
@@ -549,7 +632,9 @@
         ySelect.on("change", () => updateCustomizableChart(true));
         
         const containerId = "#customizable-chart";
+        d3.select(containerId).select("svg").remove(); // Remove old svg
         const containerNode = d3.select(containerId).node();
+        if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
         const height = 400 - margin.top - margin.bottom;
 
@@ -570,6 +655,7 @@
     function updateCustomizableChart(axisChanged = false) {
         const containerId = "#customizable-chart";
         const svg = d3.select(`${containerId} svg g`);
+        if(svg.empty()) return;
         const activeIds = new Set(activeSelection.map(d => d.id));
         
         const xVar = d3.select("#x-axis-select").property("value");
@@ -583,8 +669,8 @@
         const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
 
         // Define tick formats based on variable
-        const xTickFormat = xVar === 'workYear' ? d3.format("d") : null;
-        const yTickFormat = yVar === 'salaryInUSD' ? d => `$${d/1000}K` : null;
+        const xTickFormat = xVar === 'workYear' ? d3.format("d") : xVar === 'remoteRatio' ? d => `${d}%` : d => `$${d/1000}K`;
+        const yTickFormat = yVar === 'salaryInUSD' ? d => `$${d/1000}K` : yVar === 'remoteRatio' ? d => `${d}%` : d3.format("d");
 
         svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(500).call(d3.axisBottom(x).tickFormat(xTickFormat));
         svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y_scale).tickFormat(yTickFormat));
