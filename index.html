@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Data Visualization Project - Salary Analysis (High-Performance Canvas Render)</title>
+    <title>Advanced Data Visualization Project - Salary Analysis (High-Performance Final Version)</title>
+    <!-- Librerías Externas (D3.js y Font Awesome) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- General Structure and Theme --- */
+        /* --- ESTRUCTURA GENERAL Y TEMA --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,7 +17,11 @@
             color: #e0e0e0;
             padding-bottom: 2rem;
         }
-        .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
+        .container { 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            padding: 0 2rem; 
+        }
         .header {
             background: rgba(255, 255, 255, 0.98);
             padding: 2rem;
@@ -25,10 +30,20 @@
             margin-bottom: 2rem;
             border-bottom: 4px solid #4a90e2;
         }
-        .header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
-        .authors { font-size: 1.1rem; color: #555; font-style: italic; }
+        .header h1 { 
+            font-size: 2.5rem; 
+            color: #141e30; 
+            margin-bottom: 0.5rem; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+        }
+        .authors { 
+            font-size: 1.1rem; 
+            color: #555; 
+            font-style: italic; 
+        }
         
-        /* --- Section and Container Styles --- */
+        /* --- ESTILOS DE SECCIONES Y CONTENEDORES --- */
         .section {
             background: rgba(36, 59, 85, 0.7);
             margin: 2rem 0;
@@ -37,7 +52,15 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
+        .section-title { 
+            font-size: 1.8rem; 
+            color: #ffffff; 
+            margin-bottom: 1.5rem; 
+            text-align: center; 
+            border-bottom: 3px solid #4a90e2; 
+            padding-bottom: 0.5rem; 
+        }
+        /* RESPONSIVIDAD: La rejilla se adapta automáticamente al número de columnas según el espacio disponible. */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -54,13 +77,16 @@
             height: auto;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+        .chart-container:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); 
+        }
         
-        /* OPTIMIZACIÓN: Estilos para el contenedor híbrido Canvas/SVG */
+        /* OPTIMIZACIÓN: Contenedor para la técnica híbrida Canvas (puntos) + SVG (ejes/interacción) */
         .canvas-svg-container {
             position: relative;
             width: 100%;
-            height: 100%;
+            height: 400px; /* Altura fija para alinear canvas y svg */
         }
         .canvas-svg-container canvas, .canvas-svg-container svg {
             position: absolute;
@@ -68,7 +94,7 @@
             left: 0;
         }
 
-        /* --- Chart and Text Styles --- */
+        /* --- ESTILOS DE GRÁFICOS Y TEXTOS --- */
         .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
         .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
         .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 10; }
@@ -76,7 +102,7 @@
         .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
         .axis .tick text { fill: #333; }
         
-        /* --- Controls and Interactivity --- */
+        /* --- CONTROLES E INTERACTIVIDAD --- */
         .controls { text-align: center; margin-bottom: 1rem; }
         .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
         .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
@@ -86,21 +112,23 @@
         .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
         .custom-chart-controls select { padding: 5px 8px; border-radius: 5px; border: 1px solid #ccc; background-color: #f9f9f9; font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; }
 
-        /* --- Status Messages and Loading Animation --- */
+        /* --- MENSAJES DE ESTADO Y CARGA --- */
         .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
         .error-message { color: #ff6b6b; }
         .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- Summary Table --- */
+        /* --- TABLA DE RESUMEN --- */
         .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
         .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
         .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
         .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
         
+        /* --- LEYENDA INTERACTIVA --- */
         .legend-item { cursor: pointer; transition: opacity 0.2s; }
         .legend-item.hidden { opacity: 0.3; }
         
+        /* --- AJUSTES RESPONSIVOS (MEDIA QUERIES) --- */
         @media (max-width: 992px) { .container { padding: 0 1.5rem; } .header h1 { font-size: 2.2rem; } .section-title { font-size: 1.6rem; } }
         @media (max-width: 768px) { .charts-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); } .custom-chart-controls { flex-direction: column; gap: 0.8rem; } .summary-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); } }
         @media (max-width: 480px) { body { padding-bottom: 1rem; } .container { padding: 0 1rem; } .header { padding: 1.5rem 1rem; } .header h1 { font-size: 1.6rem; letter-spacing: 1px; } .authors { font-size: 0.9rem; } .section { padding: 1.5rem; margin: 1rem 0; } .section-title { font-size: 1.4rem; } .charts-grid { grid-template-columns: 1fr; } .chart-container { min-height: 420px; } .summary-grid { grid-template-columns: 1fr 1fr; gap: 1rem; } .summary-item .value { font-size: 1.6rem; } .summary-item .label { font-size: 0.8rem; } }
@@ -129,11 +157,11 @@
 
     <script>
     // =================================================================================
-    // --- GLOBAL VARIABLES AND CONFIGURATION ---
+    // --- VARIABLES GLOBALES Y CONFIGURACIÓN ---
     // =================================================================================
     let processedData = [];
     let activeSelection = [];
-    let quadtree; // Para búsqueda rápida de puntos en el canvas
+    let quadtree; // Estructura de datos para búsqueda rápida de puntos en el canvas
 
     const margin = { top: 60, right: 30, bottom: 60, left: 80 };
     const tooltip = d3.select(".tooltip");
@@ -141,13 +169,15 @@
     let activeStackedBarFilter = null;
     let hiddenGroups = new Set();
     
-    // --- CORRECCIÓN DE RUTA CSV PARA GITHUB PAGES ---
-    // Reemplaza la siguiente URL con la URL "Raw" de tu propio archivo CSV en GitHub.
+    // SOLUCIÓN: URL directa al archivo "raw" en el repositorio de GitHub.
+    // Esto asegura que el archivo se cargue correctamente en el entorno de GitHub Pages.
     const csvFilePath = "https://raw.githubusercontent.com/ArielBuenfil/Visualizacion-Avanzada-de-Datos/main/ds_salaries.csv";
 
     // =================================================================================
-    // --- UTILITIES ---
+    // --- FUNCIONES DE UTILIDAD ---
     // =================================================================================
+    // OPTIMIZACIÓN: Evita que una función se ejecute demasiadas veces seguidas.
+    // Esencial para el evento 'resize' de la ventana.
     function debounce(func, wait) { let timeout; return function(...args) { const context = this; clearTimeout(timeout); timeout = setTimeout(() => func.apply(context, args), wait); }; }
     function showError(message) { d3.select("#loading").style("display", "none"); d3.select("#error").style("display", "block").html(`<i class="fas fa-exclamation-triangle"></i> ${message}`); }
     function showTooltip(event, text) { tooltip.style("opacity", .9).html(text).style("left", `${event.pageX + 15}px`).style("top", `${event.pageY - 28}px`); }
@@ -155,7 +185,7 @@
     function wrap(text, width) { text.each(function() { var text = d3.select(this), words = text.text().split(/\s+/).reverse(), word, line = [], lineNumber = 0, lineHeight = 1.1, x = text.attr("x"), y = text.attr("y"), dy = parseFloat(text.attr("dy")) || 0, tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em"); while (word = words.pop()) { line.push(word); tspan.text(line.join(" ")); if (tspan.node().getComputedTextLength() > width) { line.pop(); tspan.text(line.join(" ")); line = [word]; tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word); } } }); }
 
     // =================================================================================
-    // --- DATA LOADING AND PROCESSING ---
+    // --- CARGA Y PROCESAMIENTO DE DATOS ---
     // =================================================================================
     document.addEventListener('DOMContentLoaded', () => loadData());
     function loadData() {
@@ -170,72 +200,85 @@
     function processRawData(rawData) { const expLevelMap = { 'EN': 'Entry-level', 'MI': 'Mid-level', 'SE': 'Senior-level', 'EX': 'Executive-level' }; processedData = rawData.map((row, i) => { const d = { id: `d-${i}`, workYear: +row.work_year, experienceLevel: expLevelMap[row.experience_level] || row.experience_level, employmentType: row.employment_type, jobTitle: row.job_title, salaryInUSD: +row.salary_in_usd, employeeResidence: row.employee_residence, remoteRatio: +row.remote_ratio, companyLocation: row.company_location, companySize: row.company_size }; return (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) ? null : d; }).filter(d => d !== null && d.salaryInUSD > 0); if (processedData.length === 0) throw new Error("No valid data was processed from the CSV."); activeSelection = [...processedData]; }
     
     // =================================================================================
-    // --- DASHBOARD INITIALIZATION AND UPDATE LOGIC ---
+    // --- INICIALIZACIÓN DEL DASHBOARD Y LÓGICA DE ACTUALIZACIÓN ---
     // =================================================================================
-    function initializeDashboard() { d3.select("#loading").style("display", "none"); d3.select("#content").style("display", "block"); d3.select("#resetButton").on("click", () => { d3.select("#scatter-experience .brush").call(d3.brush().move, null); activeStackedBarFilter = null; hiddenGroups.clear(); updateAllCharts(processedData, true); }); createAllVisualizations(); window.addEventListener('resize', debounce(resizeAllVisualizations, 250)); }
-    function updateAllCharts(data, fullReset = false) { activeSelection = fullReset ? [...processedData] : data; updateScatterExperience(); updateStackedBarChart(); updateCustomizableChart(); }
-    function createAllVisualizations() { createSummaryTable(processedData); drawStaticCharts(); createScatterExperience(); createStackedBarChart(); createCustomizableChart(); }
-    function resizeAllVisualizations() { drawStaticCharts(); resizeCanvasChart("#scatter-experience", "workYear", "salaryInUSD"); resizeCanvasChart("#customizable-chart"); resizeStackedBarChart(); }
-    function drawStaticCharts() { createDonutChart("#company-size-donut", "companySize"); createDonutChart("#experience-donut", "experienceLevel"); createTopJobsChart(processedData); }
+    function initializeDashboard() { 
+        d3.select("#loading").style("display", "none"); 
+        d3.select("#content").style("display", "block"); 
+        d3.select("#resetButton").on("click", () => { 
+            d3.select("#scatter-experience .brush").call(d3.brush().move, null); 
+            activeStackedBarFilter = null; 
+            hiddenGroups.clear(); 
+            updateAllCharts(processedData, true); 
+        }); 
+        createAllVisualizations(); 
+        // RESPONSIVIDAD: Se añade un listener al evento 'resize' de la ventana, optimizado con debounce.
+        window.addEventListener('resize', debounce(resizeAllVisualizations, 250)); 
+    }
+    function updateAllCharts(data, fullReset = false) { 
+        activeSelection = fullReset ? [...processedData] : data; 
+        updateScatterExperience(); 
+        updateStackedBarChart(); 
+        updateCustomizableChart(); 
+    }
+    function createAllVisualizations() { 
+        createSummaryTable(processedData); 
+        drawStaticCharts(); 
+        createScatterExperience(); 
+        createStackedBarChart(); 
+        createCustomizableChart(); 
+    }
+    // RESPONSIVIDAD: Esta función centraliza el redibujado de todos los gráficos.
+    function resizeAllVisualizations() { 
+        drawStaticCharts(); 
+        resizeCanvasChart("#scatter-experience", "workYear", "salaryInUSD"); 
+        resizeCanvasChart("#customizable-chart"); 
+        resizeStackedBarChart(); 
+    }
+    function drawStaticCharts() { 
+        createDonutChart("#company-size-donut", "companySize"); 
+        createDonutChart("#experience-donut", "experienceLevel"); 
+        createTopJobsChart(processedData); 
+    }
 
     // =================================================================================
-    // --- STATIC VISUALIZATIONS (SVG) ---
+    // --- GRÁFICOS ESTÁTICOS (Renderizados con SVG) ---
     // =================================================================================
     function createSummaryTable(data) { d3.select("#data-summary").html(""); const formatCurrency = d3.format("$,.0f"); const summaryData = [ { label: "Total Records", value: data.length.toLocaleString() }, { label: "Average Salary (USD)", value: formatCurrency(d3.mean(data, d => d.salaryInUSD)) }, { label: "Median Salary (USD)", value: formatCurrency(d3.median(data, d => d.salaryInUSD)) }, { label: "Unique Job Titles", value: new Set(data.map(d=>d.jobTitle)).size } ]; d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div").attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`); }
     function createDonutChart(containerId, groupByKey) { const container = d3.select(containerId); container.html(""); const containerNode = container.node(); if(!containerNode) return; const width = containerNode.getBoundingClientRect().width; const height = 400; const radius = Math.min(width, height) / 2.5; const svg = container.append("svg").attr("width", width).attr("height", height).append("g").attr("transform", `translate(${width / 2}, ${height / 2})`); const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length})); colorScale.domain(groupedData.map(d => d.key).sort()); const pie = d3.pie().value(d => d.value).sort(null); const arc = d3.arc().innerRadius(radius * 0.6).outerRadius(radius); svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc).attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px").on("mouseover", function(event, d) { d3.select(this).transition().duration(200).style("transform", "scale(1.05)"); const percent = (d.data.value / processedData.length * 100).toFixed(1); showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value.toLocaleString()} (${percent}%)`); }).on("mouseout", function() { d3.select(this).transition().duration(200).style("transform", "scale(1)"); hideTooltip(); }); }
     function createTopJobsChart(data) { const container = d3.select("#top-jobs-chart"); container.html(""); const containerNode = container.node(); if(!containerNode) return; const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salaryInUSD) })); const top10Jobs = avgSalaryByJob.sort((a, b) => b.avgSalary - a.avgSalary).slice(0, 10); const job_margin = { top: 20, right: 30, bottom: 40, left: 250 }; const width = containerNode.getBoundingClientRect().width - job_margin.left - job_margin.right; const height = 400 - job_margin.top - job_margin.bottom; const svg = container.append("svg").attr("width", width + job_margin.left + job_margin.right).attr("height", height + job_margin.top + job_margin.bottom).append("g").attr("transform", `translate(${job_margin.left},${job_margin.top})`); const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]); const y_scale = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.2); svg.append("g").call(d3.axisLeft(y_scale)).selectAll(".tick text").call(wrap, job_margin.left - 15); svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`)); svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth()).attr("x", 0).attr("width", 0).attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip).transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary)); }
 
     // =================================================================================
-    // --- GENERIC CANVAS CHART LOGIC (HIGH-PERFORMANCE) ---
+    // --- LÓGICA GENÉRICA PARA GRÁFICOS DE CANVAS (ALTO RENDIMIENTO) ---
     // =================================================================================
-    
-    // Función genérica para crear la estructura de un gráfico Canvas + SVG
     function createCanvasChart(containerId) {
         const container = d3.select(containerId);
-        container.html(""); // Limpiar
-        // El canvas para los puntos (capa inferior)
+        container.html("");
         container.append('canvas');
-        // El SVG para los ejes y el brush (capa superior)
         const svg = container.append('svg').append('g');
         svg.append("g").attr("class", "x-axis axis");
         svg.append("g").attr("class", "y-axis axis");
         svg.append("text").attr("class", "x-label");
         svg.append("text").attr("class", "y-label").attr("transform", "rotate(-90)");
-        svg.append("g").attr("class", "legend-container");
-        svg.append("g").attr("class", "brush"); // Para interacciones
+        if (containerId === "#scatter-experience") svg.append("g").attr("class", "legend-container");
+        svg.append("g").attr("class", "brush");
     }
 
-    // Función genérica para redimensionar y dibujar ejes/leyendas en el SVG
     function resizeCanvasChart(containerId, xVar, yVar) {
         const containerNode = d3.select(containerId).node();
         if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
+        const height = 400; // Altura fija para el área de dibujo
 
-        // Si es el gráfico personalizable, obtener las variables de los selectores
-        if (containerId === "#customizable-chart") {
-            xVar = d3.select("#x-axis-select").property("value");
-            yVar = d3.select("#y-axis-select").property("value");
-        }
+        if (containerId === "#customizable-chart") { xVar = d3.select("#x-axis-select").property("value"); yVar = d3.select("#y-axis-select").property("value"); }
 
-        // Configurar Canvas
-        const canvas = d3.select(containerId).select('canvas')
-            .attr('width', width)
-            .attr('height', height)
-            .style('margin-left', `${margin.left}px`)
-            .style('margin-top', `${margin.top}px`);
-
-        // Configurar SVG
-        const svg = d3.select(containerId).select('svg')
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom);
+        const canvas = d3.select(containerId).select('canvas').attr('width', width).attr('height', height).style('margin-left', `${margin.left}px`).style('margin-top', `${margin.top}px`);
+        const svg = d3.select(containerId).select('svg').attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom);
         const g = svg.select("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Escalas
         const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
         const y = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
 
-        // Ejes
         const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
         const xTickFormat = xVar === 'salaryInUSD' ? d => `$${d/1000}K` : d3.format(xVar === 'workYear' ? "d" : ".0f");
         const yTickFormat = yVar === 'salaryInUSD' ? d => `$${d/1000}K` : d3.format(yVar === 'workYear' ? "d" : ".0f");
@@ -244,7 +287,6 @@
         g.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
         g.select(".y-label").attr("y", -margin.left + 30).attr("x", -height / 2).text(columnLabels[yVar]);
 
-        // Leyenda (solo para el primer gráfico)
         if (containerId === "#scatter-experience") {
             const legendGroups = [...new Set(processedData.map(d => d.experienceLevel))].sort();
             colorScale.domain(legendGroups);
@@ -257,7 +299,6 @@
             });
         }
         
-        // Brush
         const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => {
             if (!event.selection) { if (event.sourceEvent && event.sourceEvent.type !== "end") { updateAllCharts(processedData, true); } return; }
             const [[x0, y0], [x1, y1]] = event.selection;
@@ -266,91 +307,72 @@
         });
         g.select(".brush").call(brush);
         
-        // Quadtree para tooltips
+        // OPTIMIZACIÓN: Se crea el Quadtree para búsqueda de puntos ultra-rápida.
         quadtree = d3.quadtree().x(d => x(d[xVar])).y(d => y(d[yVar])).addAll(processedData);
+        // El SVG superior captura el movimiento del ratón para los tooltips.
         svg.on('mousemove', event => {
             const [mx, my] = d3.pointer(event, g.node());
-            const closest = quadtree.find(mx, my, 20); // Encuentra el punto más cercano en un radio de 20px
-            if (closest) {
-                showTooltip(event, `<b>${columnLabels[xVar]}:</b> ${closest[xVar]}<br><b>${columnLabels[yVar]}:</b> ${d3.format(",.0f")(closest[yVar])}<br><b>Level:</b> ${closest.experienceLevel}`);
-            } else {
-                hideTooltip();
-            }
+            const closest = quadtree.find(mx, my, 20); // Radio de búsqueda de 20px
+            if (closest) { showTooltip(event, `<b>${columnLabels[xVar]}:</b> ${closest[xVar]}<br><b>${columnLabels[yVar]}:</b> ${d3.format(",.0f")(closest[yVar])}<br><b>Level:</b> ${closest.experienceLevel}`); } 
+            else { hideTooltip(); }
         }).on('mouseout', hideTooltip);
         
-        // Dibujar los puntos en el canvas
         drawPointsOnCanvas(containerId, xVar, yVar);
     }
 
-    // Función que realmente dibuja los puntos en el canvas
     function drawPointsOnCanvas(containerId, xVar, yVar) {
         const containerNode = d3.select(containerId).node();
         if(!containerNode) return;
         const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-        const height = 400 - margin.top - margin.bottom;
+        const height = 400;
 
-        if (containerId === "#customizable-chart") {
-            xVar = d3.select("#x-axis-select").property("value");
-            yVar = d3.select("#y-axis-select").property("value");
-        }
+        if (containerId === "#customizable-chart") { xVar = d3.select("#x-axis-select").property("value"); yVar = d3.select("#y-axis-select").property("value"); }
 
-        const canvas = d3.select(containerId).select('canvas').node();
-        const context = canvas.getContext('2d');
+        const context = d3.select(containerId).select('canvas').node().getContext('2d');
         context.clearRect(0, 0, width, height);
 
         const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
         const y = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
         const activeIds = new Set(activeSelection.map(d => d.id));
         
+        // Dibujar puntos inactivos primero
+        context.globalAlpha = 0.1;
+        context.fillStyle = 'grey';
         processedData.forEach(d => {
-            const isActive = activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel);
-            context.beginPath();
-            context.arc(x(d[xVar]), y(d[yVar]), isActive ? 3 : 1.5, 0, 2 * Math.PI);
-            context.fillStyle = isActive ? colorScale(d.experienceLevel) : 'rgba(128, 128, 128, 0.1)';
-            context.fill();
+            if (!activeIds.has(d.id) || hiddenGroups.has(d.experienceLevel)) {
+                context.beginPath();
+                context.arc(x(d[xVar]), y(d[yVar]), 2, 0, 2 * Math.PI);
+                context.fill();
+            }
         });
+
+        // Dibujar puntos activos
+        context.globalAlpha = 0.8;
+        experienceLevels = [...new Set(processedData.map(d => d.experienceLevel))];
+        experienceLevels.forEach(level => {
+            if (hiddenGroups.has(level)) return;
+            context.fillStyle = colorScale(level);
+            activeSelection.forEach(d => {
+                if (d.experienceLevel === level) {
+                    context.beginPath();
+                    context.arc(x(d[xVar]), y(d[yVar]), 3, 0, 2 * Math.PI);
+                    context.fill();
+                }
+            });
+        });
+        context.globalAlpha = 1.0; // Restaurar opacidad
     }
 
     // =================================================================================
-    // --- CANVAS SCATTER PLOT 1: SALARY VS WORK YEAR ---
+    // --- IMPLEMENTACIONES ESPECÍFICAS DE GRÁFICOS ---
     // =================================================================================
-    function createScatterExperience() {
-        createCanvasChart("#scatter-experience");
-        resizeCanvasChart("#scatter-experience", "workYear", "salaryInUSD");
-    }
-
-    function updateScatterExperience() {
-        drawPointsOnCanvas("#scatter-experience", "workYear", "salaryInUSD");
-        d3.select("#scatter-experience").selectAll(".legend-item").classed("hidden", function() { return hiddenGroups.has(d3.select(this).text()); });
-    }
-    
-    // =================================================================================
-    // --- CANVAS SCATTER PLOT 2: CUSTOMIZABLE ---
-    // =================================================================================
-    function createCustomizableChart() {
-        const numericalColumns = ["workYear", "salaryInUSD", "remoteRatio"];
-        const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
-        const xSelect = d3.select("#x-axis-select").on("change", () => resizeCanvasChart("#customizable-chart"));
-        const ySelect = d3.select("#y-axis-select").on("change", () => resizeCanvasChart("#customizable-chart"));
-        xSelect.selectAll("option").data(numericalColumns).enter().append("option").attr("value", d => d).text(d => columnLabels[d]);
-        ySelect.selectAll("option").data(numericalColumns).enter().append("option").attr("value", d => d).text(d => columnLabels[d]);
-        xSelect.property("value", "workYear");
-        ySelect.property("value", "salaryInUSD");
-        
-        createCanvasChart("#customizable-chart");
-        resizeCanvasChart("#customizable-chart");
-    }
-
-    function updateCustomizableChart() {
-        drawPointsOnCanvas("#customizable-chart");
-    }
-
-    // =================================================================================
-    // --- STACKED BAR CHART (SVG, bajo número de elementos, no necesita canvas) ---
-    // =================================================================================
+    function createScatterExperience() { createCanvasChart("#scatter-experience"); resizeCanvasChart("#scatter-experience", "workYear", "salaryInUSD"); }
+    function updateScatterExperience() { drawPointsOnCanvas("#scatter-experience", "workYear", "salaryInUSD"); d3.select("#scatter-experience").selectAll(".legend-item").classed("hidden", function() { return hiddenGroups.has(d3.select(this).text()); }); }
+    function createCustomizableChart() { const numericalColumns = ["workYear", "salaryInUSD", "remoteRatio"]; const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" }; const xSelect = d3.select("#x-axis-select").on("change", () => resizeCanvasChart("#customizable-chart")); const ySelect = d3.select("#y-axis-select").on("change", () => resizeCanvasChart("#customizable-chart")); xSelect.selectAll("option").data(numericalColumns).enter().append("option").attr("value", d => d).text(d => columnLabels[d]); ySelect.selectAll("option").data(numericalColumns).enter().append("option").attr("value", d => d).text(d => columnLabels[d]); xSelect.property("value", "workYear"); ySelect.property("value", "salaryInUSD"); createCanvasChart("#customizable-chart"); resizeCanvasChart("#customizable-chart"); }
+    function updateCustomizableChart() { drawPointsOnCanvas("#customizable-chart"); }
     function createStackedBarChart(){ const svg = d3.select("#stacked-bar").append("svg").append("g"); svg.append("g").attr("class","x-axis axis"); svg.append("g").attr("class","y-axis axis"); svg.append("g").attr("class","bars"); svg.append("text").attr("class","x-label"); svg.append("text").attr("class","y-label").attr("transform","rotate(-90)"); resizeStackedBarChart(); }
-    function resizeStackedBarChart() { const containerNode = d3.select("#stacked-bar").node(); if(!containerNode) return; const width = containerNode.getBoundingClientRect().width - margin.left - margin.right; const height = 400 - margin.top - margin.bottom; d3.select("#stacked-bar svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).select("g").attr("transform", `translate(${margin.left},${margin.top})`); d3.select("#stacked-bar .x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)"); d3.select("#stacked-bar .y-label").attr("y", -margin.left + 30).attr("x", -height/2).text("Number of Employees"); updateStackedBarChart(); }
-    function updateStackedBarChart(){ const g = d3.select("#stacked-bar g"); const width = g.node().parentNode.getBoundingClientRect().width - margin.left - margin.right; const height = 400 - margin.top - margin.bottom; const salaryRanges = [{min:0,max:75000,label:"<75K"},{min:75001,max:150000,label:"75-150K"},{min:150001,max:225000,label:"150-225K"},{min:225001,max:Infinity,label:">225K"}]; const experienceLevels = [...new Set(processedData.map(d => d.experienceLevel))].sort(); const stackedDataInput = salaryRanges.map(range => { const entry = { range: range.label }; experienceLevels.forEach(level => { entry[level] = activeSelection.filter(d => d.experienceLevel === level && d.salaryInUSD >= range.min && d.salaryInUSD <= range.max).length; }); return entry; }); const series = d3.stack().keys(experienceLevels)(stackedDataInput); const xScale = d3.scaleBand().domain(salaryRanges.map(d => d.label)).range([0, width]).padding(0.2); const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]); colorScale.domain(experienceLevels); g.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(300).call(d3.axisBottom(xScale)); g.select(".y-axis").transition().duration(300).call(d3.axisLeft(yScale)); const barGroups = g.select(".bars").selectAll("g").data(series, d => d.key); barGroups.enter().append("g").attr("fill", d => colorScale(d.key)).merge(barGroups); const rects = barGroups.selectAll("rect").data(d => d); rects.enter().append("rect").merge(rects).style("cursor", "pointer").on("mouseover", function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Range: ${d.data.range}<br>Count: ${d[1]-d[0]}`);}).on("mouseout",hideTooltip).on("click", function(event, d){ event.stopPropagation(); const experience = d3.select(this.parentNode).datum().key; const rangeLabel = d.data.range; if(activeStackedBarFilter && activeStackedBarFilter.experience === experience && activeStackedBarFilter.range === rangeLabel){ activeStackedBarFilter = null; updateAllCharts(processedData, true); } else { activeStackedBarFilter = { experience, range: rangeLabel }; const range = salaryRanges.find(r => r.label === rangeLabel); updateAllCharts(processedData.filter(item => item.experienceLevel === experience && item.salaryInUSD >= range.min && item.salaryInUSD <= range.max)); } }).transition().duration(300).attr("x", d => xScale(d.data.range)).attr("width", xScale.bandwidth()).attr("y", d => yScale(d[1])).attr("height", d => yScale(d[0]) - yScale(d[1])); g.selectAll("rect").transition().duration(300).attr("opacity", function(d) { if (!activeStackedBarFilter) return 0.9; const key = d3.select(this.parentNode).datum().key; return (activeStackedBarFilter.range === d.data.range && activeStackedBarFilter.experience === key) ? 1 : 0.2; }); }
+    function resizeStackedBarChart() { const containerNode = d3.select("#stacked-bar").node(); if(!containerNode) return; const width = containerNode.getBoundingClientRect().width - margin.left - margin.right; const height = 400; d3.select("#stacked-bar svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).select("g").attr("transform", `translate(${margin.left},${margin.top})`); d3.select("#stacked-bar .x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)"); d3.select("#stacked-bar .y-label").attr("y", -margin.left + 30).attr("x", -height / 2).text("Number of Employees"); updateStackedBarChart(); }
+    function updateStackedBarChart(){ const g = d3.select("#stacked-bar g"); const width = g.node().parentNode.getBoundingClientRect().width - margin.left - margin.right; const height = 400; const salaryRanges = [{min:0,max:75000,label:"<75K"},{min:75001,max:150000,label:"75-150K"},{min:150001,max:225000,label:"150-225K"},{min:225001,max:Infinity,label:">225K"}]; const experienceLevels = [...new Set(processedData.map(d => d.experienceLevel))].sort(); const stackedDataInput = salaryRanges.map(range => { const entry = { range: range.label }; experienceLevels.forEach(level => { entry[level] = activeSelection.filter(d => d.experienceLevel === level && d.salaryInUSD >= range.min && d.salaryInUSD <= range.max).length; }); return entry; }); const series = d3.stack().keys(experienceLevels)(stackedDataInput); const xScale = d3.scaleBand().domain(salaryRanges.map(d => d.label)).range([0, width]).padding(0.2); const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]); colorScale.domain(experienceLevels); g.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(300).call(d3.axisBottom(xScale)); g.select(".y-axis").transition().duration(300).call(d3.axisLeft(yScale)); const barGroups = g.select(".bars").selectAll("g").data(series, d => d.key); barGroups.enter().append("g").attr("fill", d => colorScale(d.key)).merge(barGroups); const rects = barGroups.selectAll("rect").data(d => d); rects.enter().append("rect").merge(rects).style("cursor", "pointer").on("mouseover", function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Range: ${d.data.range}<br>Count: ${d[1]-d[0]}`);}).on("mouseout",hideTooltip).on("click", function(event, d){ event.stopPropagation(); const experience = d3.select(this.parentNode).datum().key; const rangeLabel = d.data.range; if(activeStackedBarFilter && activeStackedBarFilter.experience === experience && activeStackedBarFilter.range === rangeLabel){ activeStackedBarFilter = null; updateAllCharts(processedData, true); } else { activeStackedBarFilter = { experience, range: rangeLabel }; const range = salaryRanges.find(r => r.label === rangeLabel); updateAllCharts(processedData.filter(item => item.experienceLevel === experience && item.salaryInUSD >= range.min && item.salaryInUSD <= range.max)); } }).transition().duration(300).attr("x", d => xScale(d.data.range)).attr("width", xScale.bandwidth()).attr("y", d => yScale(d[1])).attr("height", d => yScale(d[0]) - yScale(d[1])); g.selectAll("rect").transition().duration(300).attr("opacity", function(d) { if (!activeStackedBarFilter) return 0.9; const key = d3.select(this.parentNode).datum().key; return (activeStackedBarFilter.range === d.data.range && activeStackedBarFilter.experience === key) ? 1 : 0.2; }); }
     </script>
 </body>
 </html>
