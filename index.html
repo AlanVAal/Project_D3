@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Data Visualization Project - Salary Analysis (Optimized)</title>
+    <title>Advanced Data Visualization Project - Salary Analysis</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -27,101 +27,146 @@
         }
         .header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
         .authors { font-size: 1.1rem; color: #555; font-style: italic; }
+/* --- Section and Container Styles --- */
+    .section {
+        background: rgba(36, 59, 85, 0.7);
+        margin: 2rem 0;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .chart-container {
+        background: #ffffff;
+        color: #333;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        min-height: 500px;
+        height: auto;
+        overflow: visible;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
 
-        /* --- Section and Container Styles --- */
-        .section {
-            background: rgba(36, 59, 85, 0.7);
-            margin: 2rem 0;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
-        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
-        .chart-container {
-            background: #ffffff;
-            color: #333;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            min-height: 500px;
-            height: auto;
-            overflow: hidden; /* Changed from visible to hidden for better container behavior */
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+    /* --- Chart and Text Styles --- */
+    .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
+    .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
+    .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    .axis { font-size: 12px; }
+    .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
+    .axis .tick text { fill: #333; }
+    
+    /* --- Controls and Interactivity --- */
+    .controls { text-align: center; margin-bottom: 1rem; }
+    .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
+    .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
+    .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
+    
+    /* Controls for customizable chart */
+    .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
+    .custom-chart-controls select {
+        padding: 5px 8px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        background-color: #f9f9f9;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 0.9rem;
+    }
 
-        /* --- Chart and Text Styles --- */
-        .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
-        .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
-        .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; z-index: 10; }
-        .axis { font-size: 12px; }
-        .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
-        .axis .tick text { fill: #333; }
-        
-        /* --- Controls and Interactivity --- */
-        .controls { text-align: center; margin-bottom: 1rem; }
-        .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
-        .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
-        .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
-        
-        /* Controls for customizable chart */
-        .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
-        .custom-chart-controls select {
-            padding: 5px 8px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            background-color: #f9f9f9;
-            font-family: 'Segoe UI', sans-serif;
+    /* --- Status Messages and Loading Animation --- */
+    .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
+    .error-message { color: #ff6b6b; }
+    .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* --- Summary Table --- */
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
+    .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
+    .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
+    
+    /* --- Interactive Legend --- */
+    .legend-item { cursor: pointer; }
+    .legend-item.hidden { opacity: 0.5; }
+    
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 992px) {
+        /* Para tabletas y escritorios pequeños */
+        .container {
+            padding: 0 1.5rem;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+        }
+        .section-title {
+            font-size: 1.6rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Para tabletas pequeñas y móviles grandes */
+        .charts-grid {
+            /* Ajusta minmax para permitir columnas individuales más pequeñas */
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        }
+        .custom-chart-controls {
+            flex-direction: column; /* Apila los controles verticalmente */
+            gap: 0.8rem;
+        }
+        .summary-grid {
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        /* Para la mayoría de los teléfonos móviles */
+        body {
+            padding-bottom: 1rem;
+        }
+        .container {
+            padding: 0 1rem; /* Reduce el padding en pantallas pequeñas */
+        }
+        .header {
+            padding: 1.5rem 1rem;
+        }
+        .header h1 {
+            font-size: 1.6rem; /* Reduce aún más para móviles */
+            letter-spacing: 1px;
+        }
+        .authors {
             font-size: 0.9rem;
         }
-
-        /* --- Status Messages and Loading Animation --- */
-        .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
-        .error-message { color: #ff6b6b; }
-        .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* --- Summary Table --- */
-        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
-        .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
-        .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
-        .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
-        
-        /* --- Interactive Legend --- */
-        .legend-item { cursor: pointer; transition: opacity 0.2s; }
-        .legend-item.hidden { opacity: 0.4; }
-        
-        /* --- Responsive Adjustments --- */
-        @media (max-width: 992px) {
-            .container { padding: 0 1.5rem; }
-            .header h1 { font-size: 2.2rem; }
-            .section-title { font-size: 1.6rem; }
+        .section {
+            padding: 1.5rem;
+            margin: 1rem 0;
         }
-
-        @media (max-width: 768px) {
-            .charts-grid { grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); }
-            .custom-chart-controls { flex-direction: column; gap: 0.8rem; }
-            .summary-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+        .section-title {
+            font-size: 1.4rem;
         }
-
-        @media (max-width: 480px) {
-            body { padding-bottom: 1rem; }
-            .container { padding: 0 1rem; }
-            .header { padding: 1.5rem 1rem; }
-            .header h1 { font-size: 1.6rem; letter-spacing: 1px; }
-            .authors { font-size: 0.9rem; }
-            .section { padding: 1.5rem; margin: 1rem 0; }
-            .section-title { font-size: 1.4rem; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .chart-container { min-height: 420px; }
-            .summary-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
-            .summary-item .value { font-size: 1.6rem; }
-            .summary-item .label { font-size: 0.8rem; }
+        .charts-grid {
+            /* Asegura que sea siempre una sola columna en pantallas muy pequeñas */
+            grid-template-columns: 1fr;
         }
-    </style>
+        .chart-container {
+             min-height: 420px; /* Reduce la altura mínima de los gráficos */
+        }
+        .summary-grid {
+            /* Diseño de dos columnas para el resumen en móviles */
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .summary-item .value {
+            font-size: 1.6rem;
+        }
+         .summary-item .label {
+            font-size: 0.8rem;
+        }
+    }
+</style>
 </head>
 <body>
     <div class="header">
@@ -205,17 +250,18 @@
 let processedData = [];
 let activeSelection = [];
 
-const margin = { top: 60, right: 30, bottom: 60, left: 80 };
+const margin = { top: 60, right: 30, bottom: 60, left: 80 }; // Increased left margin for salary labels
 const tooltip = d3.select(".tooltip");
 const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
 let activeStackedBarFilter = null;
 let hiddenGroups = new Set();
-const TRANSITION_DURATION = 500;
 
 // =================================================================================
-// --- DATA LOADING AND PROCESSING ---
+// --- DATA LOADING AND PROCESSING (ADAPTED FOR NEW CSV) ---
 // =================================================================================
-const csvFilePath = "./ds_salaries.csv";
+
+// ---!!! IMPORTANT: CHANGE THIS PATH TO YOUR CSV FILE NAME !!!---
+const csvFilePath = "./ds_salaries.csv"; 
 
 document.addEventListener('DOMContentLoaded', () => { loadData(); });
 
@@ -225,11 +271,12 @@ function loadData() {
         initializeDashboard();
     }).catch(error => {
         console.error("D3 Error:", error);
-        showError(`Could not load the file from "${csvFilePath}".<br>Please check the file path, name, and that the server can access it.`);
+        showError(`Could not load the file from "${csvFilePath}".<br>Please check the file path and name.`);
     });
 }
 
 function processRawData(rawData) {
+    // Experience level mapping for better labels
     const expLevelMap = { 'EN': 'Entry-level', 'MI': 'Mid-level', 'SE': 'Senior-level', 'EX': 'Executive-level' };
     
     processedData = rawData.map((row, i) => {
@@ -245,7 +292,10 @@ function processRawData(rawData) {
             companyLocation: row.company_location,
             companySize: row.company_size
         };
-        if (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) return null;
+        // Basic validation for key numeric fields
+        if (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) {
+            return null;
+        }
         return d;
     }).filter(d => d !== null && d.salaryInUSD > 0);
     
@@ -259,45 +309,39 @@ function processRawData(rawData) {
 // =================================================================================
 // --- DASHBOARD INITIALIZATION AND UTILITIES ---
 // =================================================================================
+
 function initializeDashboard() {
     d3.select("#loading").style("display", "none");
     d3.select("#content").style("display", "block");
     
     d3.select("#resetButton").on("click", () => {
-        d3.select("#scatter-experience .brush").call(d3.brush().move, null);
+        const brush = d3.brush();
+        d3.select("#scatter-experience .brush").call(brush.move, null);
         activeStackedBarFilter = null;
         hiddenGroups.clear();
         updateAllCharts(processedData, true);
     });
     
     createAllVisualizations();
-    
-    // OPTIMIZATION: Use debouncing to prevent excessive redraws on window resize
-    const debouncedRedraw = debounce(createAllVisualizations, 250);
-    window.addEventListener('resize', debouncedRedraw);
-}
-
-// OPTIMIZATION: Debounce function to limit the rate at which a function gets called.
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+    // Redraw charts on window resize to ensure they fit correctly
+    window.addEventListener('resize', createAllVisualizations);
 }
 
 function showError(message) { d3.select("#loading").style("display", "none"); d3.select("#error").style("display", "block").html(`<i class="fas fa-exclamation-triangle"></i> ${message}`); }
-function showTooltip(event, text) { tooltip.style("opacity", .9).html(text).style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 28}px`); }
+function showTooltip(event, text) { tooltip.style("opacity", .9); tooltip.html(text).style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 28}px`); }
 function hideTooltip() { tooltip.style("opacity", 0); }
 
 function wrap(text, width) {
     text.each(function() {
-        var text = d3.select(this), words = text.text().split(/\s+/).reverse(), word, line = [], lineNumber = 0,
-            lineHeight = 1.1, x = text.attr("x"), y = text.attr("y"), dy = parseFloat(text.attr("dy")) || 0,
+        var text = d3.select(this),
+            words = text.text().split(/\s+/).reverse(),
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.1, // ems
+            x = text.attr("x"),
+            y = text.attr("y"),
+            dy = parseFloat(text.attr("dy")) || 0,
             tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
         while (word = words.pop()) {
             line.push(word);
@@ -316,82 +360,78 @@ function wrap(text, width) {
 // --- MAIN CHART LOGIC ---
 // =================================================================================
 function updateAllCharts(data, fullReset = false) {
-    if (fullReset) {
-        activeSelection = [...processedData];
-    } else {
-        activeSelection = data;
-    }
+    activeSelection = fullReset ? [...processedData] : data;
     
+    // Update linked charts instantly
     updateScatterExperience();
     updateStackedBarChart();
-    updateCustomizableChart();
+    // Update non-linked charts
+    updateCustomizableChart(); 
 }
 
 function createAllVisualizations() {
     createSummaryTable(processedData);
+    createDonutChart("#company-size-donut", "companySize", "Company Size");
+    createDonutChart("#experience-donut", "experienceLevel", "Experience Level");
     createTopJobsChart(processedData);
-    createDonutChart("#company-size-donut", "companySize");
-    createDonutChart("#experience-donut", "experienceLevel");
     createScatterExperience();
     createStackedBarChart();
     createCustomizableChart();
 }
 
 // =================================================================================
-// --- VISUALIZATIONS ---
+// --- VISUALIZATIONS (ADAPTED) ---
 // =================================================================================
+
 function createSummaryTable(data) {
-    const container = d3.select("#data-summary");
-    container.html("");
+    d3.select("#data-summary").html("");
     const formatCurrency = d3.format("$,.0f");
     const summaryData = [
         { label: "Total Records", value: data.length.toLocaleString() },
         { label: "Average Salary (USD)", value: formatCurrency(d3.mean(data, d => d.salaryInUSD)) },
         { label: "Median Salary (USD)", value: formatCurrency(d3.median(data, d => d.salaryInUSD)) },
-        { label: "Unique Job Titles", value: new Set(data.map(d => d.jobTitle)).size }
+        { label: "Unique Job Titles", value: new Set(data.map(d=>d.jobTitle)).size }
     ];
-    container.selectAll(".summary-item").data(summaryData).enter().append("div")
+    d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
         .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
 }
 
 function createDonutChart(containerId, groupByKey) {
-    const containerNode = d3.select(containerId).node();
-    if (!containerNode) return;
     d3.select(containerId).html("");
-
     const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
     colorScale.domain(groupedData.map(d => d.key).sort());
 
+    const containerNode = d3.select(containerId).node();
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width;
     const height = 400;
     const radius = Math.min(width, height) / 2.5;
     const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
         .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
-    
     const pie = d3.pie().value(d => d.value).sort(null);
     const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
 
-    svg.selectAll("path").data(pie(groupedData)).enter().append("path")
-        .attr("d", arc)
-        .attr("fill", d => colorScale(d.data.key))
-        .attr("stroke", "#141e30").style("stroke-width", "3px")
+    svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
+        .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
         .on("mouseover", function(event, d) {
-            d3.select(this).transition().duration(200).attr("transform", "scale(1.05)");
+            d3.select(this).style("transform", "scale(1.05)");
             const percent = (d.data.value / processedData.length * 100).toFixed(1);
             showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value.toLocaleString()} (${percent}%)`);
         })
-        .on("mouseout", function() { d3.select(this).transition().duration(200).attr("transform", "scale(1)"); hideTooltip(); });
+        .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
 }
 
 function createTopJobsChart(data) {
-    const containerNode = d3.select("#top-jobs-chart").node();
-    if (!containerNode) return;
     d3.select("#top-jobs-chart").html("");
-
-    const avgSalaryByJob = Array.from(d3.group(data, d => d.jobTitle), ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salaryInUSD) }));
+    const avgSalaryByJob = Array.from(
+        d3.group(data, d => d.jobTitle), 
+        ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salaryInUSD) })
+    );
     const top10Jobs = avgSalaryByJob.sort((a, b) => b.avgSalary - a.avgSalary).slice(0, 10);
     
     const job_margin = { top: 20, right: 30, bottom: 40, left: 200 };
+    const containerNode = d3.select("#top-jobs-chart").node();
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width - job_margin.left - job_margin.right;
     const height = 400 - job_margin.top - job_margin.bottom;
     
@@ -400,24 +440,22 @@ function createTopJobsChart(data) {
     const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]);
     const y_scale = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
     
-    svg.append("g").call(d3.axisLeft(y_scale)).selectAll(".tick text").call(wrap, job_margin.left - 15);
+    svg.append("g").call(d3.axisLeft(y_scale))
+       .selectAll(".tick text")
+       .call(wrap, job_margin.left - 15);
+       
     svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
     
-    svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar")
-        .attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth())
-        .attr("x", 0).attr("width", 0)
-        .attr("fill", "#4a90e2")
-        .on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`))
-        .on("mouseout", hideTooltip)
+    svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth()).attr("x", 0).attr("width", 0)
+        .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
         .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
 }
 
-// --- INTERACTIVE CHARTS ---
-function createScatterExperience() {
-    const containerNode = d3.select("#scatter-experience").node();
-    if (!containerNode) return;
+// --- INTERACTIVE CHARTS (ADAPTED) ---
+function createScatterExperience(){
     d3.select("#scatter-experience").html("");
-    
+    const containerNode = d3.select("#scatter-experience").node();
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
     const svg = d3.select("#scatter-experience").append("svg")
@@ -433,7 +471,10 @@ function createScatterExperience() {
     svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Work Year");
     svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 30).attr("x", -height / 2).text("Salary (USD)");
     
-    svg.append("g").attr("class", "dots-container");
+    svg.append("g").attr("class", "dots-container").selectAll("circle").data(processedData, d => d.id)
+        .enter().append("circle").attr("class", "dot")
+        .attr("cx", d => x(d.workYear)).attr("cy", d => y_scale(d.salaryInUSD))
+        .attr("r", 0);
 
     const legendGroups = [...new Set(processedData.map(d => d.experienceLevel))].sort();
     colorScale.domain(legendGroups);
@@ -442,7 +483,7 @@ function createScatterExperience() {
         const legendItem = legend.append("g").attr("class", "legend-item").attr("transform", `translate(0, ${i * 20})`)
             .on("click", function() {
                 hiddenGroups.has(group) ? hiddenGroups.delete(group) : hiddenGroups.add(group);
-                updateAllCharts(activeSelection); // Update based on current selection
+                updateAllCharts(activeSelection);
             });
         legendItem.append("rect").attr("width", 15).attr("height", 15).attr("fill", colorScale(group));
         legendItem.append("text").attr("x", 20).attr("y", 12).text(group).style("fill", "#333").style("font-size", "12px");
@@ -457,45 +498,35 @@ function createScatterExperience() {
         }
         const [[x0, y0], [x1, y1]] = event.selection;
         const brushedData = processedData.filter(d => 
-            x(d.workYear) >= x0 && x(d.workYear) <= x1 && y_scale(d.salaryInUSD) >= y0 && y_scale(d.salaryInUSD) <= y1
+            x(d.workYear) >= x0 && x(d.workYear) <= x1 &&
+            y_scale(d.salaryInUSD) >= y0 && y_scale(d.salaryInUSD) <= y1
         );
         updateAllCharts(brushedData);
     });
     svg.append("g").attr("class", "brush").call(brush);
-    
     updateScatterExperience();
 }
 
-function updateScatterExperience() {
-    const container = d3.select("#scatter-experience");
-    if (container.select("svg").empty()) return;
-
+function updateScatterExperience(){
     const activeIds = new Set(activeSelection.map(d => d.id));
-    
-    const dots = container.select(".dots-container").selectAll("circle").data(processedData, d => d.id);
-    
-    dots.enter().append("circle").attr("class", "dot")
-        .attr("cx", d => d3.select("#scatter-experience .x-axis").call(d3.axisBottom(d3.scaleLinear().domain(d3.extent(processedData, d => d.workYear)).nice())).scale()(d.workYear))
-        .attr("cy", d => d3.select("#scatter-experience .y-axis").call(d3.axisLeft(d3.scaleLinear().domain([0, d3.max(processedData, d => d.salaryInUSD)]).nice())).scale()(d.salaryInUSD))
-        .attr("r", 0)
-        .merge(dots)
+    d3.select("#scatter-experience").selectAll(".dot")
         .on("mouseover", (e, d) => showTooltip(e, `Year: ${d.workYear}<br>Salary: $${d.salaryInUSD.toLocaleString()}<br>Level: ${d.experienceLevel}`))
         .on("mouseout", hideTooltip)
-        .transition().duration(TRANSITION_DURATION)
         .attr("fill", d => colorScale(d.experienceLevel))
         .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 0.8 : 0.05)
         .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 5 : 0);
-        
-    dots.exit().transition().duration(TRANSITION_DURATION).attr("r", 0).remove();
     
-    container.selectAll(".legend-item").classed("hidden", d => hiddenGroups.has(d));
+    d3.select("#scatter-experience").selectAll(".legend-item")
+      .classed("hidden", function() {
+        const group = d3.select(this).text();
+        return hiddenGroups.has(group);
+      });
 }
 
-function createStackedBarChart() {
-    const containerNode = d3.select("#stacked-bar").node();
-    if (!containerNode) return;
+function createStackedBarChart(){
     d3.select("#stacked-bar").html("");
-    
+    const containerNode = d3.select("#stacked-bar").node();
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width;
     const svg = d3.select("#stacked-bar").append("svg").attr("width", width).attr("height", 450)
         .append("g").attr("transform",`translate(${margin.left},${margin.top})`);
@@ -504,14 +535,12 @@ function createStackedBarChart() {
     svg.append("g").attr("class","bars");
     svg.append("text").attr("class","x-label").attr("text-anchor","middle");
     svg.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)");
-    
     updateStackedBarChart();
 }
 
-function updateStackedBarChart() {
+function updateStackedBarChart(){
     const containerNode = d3.select("#stacked-bar").node();
-    if (!containerNode) return;
-    
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
     const svg = d3.select("#stacked-bar svg g");
@@ -534,17 +563,17 @@ function updateStackedBarChart() {
     const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]);
     colorScale.domain(experienceLevels);
 
-    svg.select(".x-axis").attr("transform",`translate(0,${height})`).transition().duration(TRANSITION_DURATION).call(d3.axisBottom(xScale));
-    svg.select(".y-axis").transition().duration(TRANSITION_DURATION).call(d3.axisLeft(yScale));
+    svg.select(".x-axis").attr("transform",`translate(0,${height})`).call(d3.axisBottom(xScale));
+    svg.select(".y-axis").call(d3.axisLeft(yScale));
     svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)");
     svg.select(".y-label").attr("y", -margin.left + 30).attr("x", -height/2).text("Number of Employees");
 
     const barGroups = svg.select(".bars").selectAll("g").data(series, d => d.key);
-    barGroups.enter().append("g").attr("fill", d => colorScale(d.key)).merge(barGroups);
+    barGroups.enter().append("g").merge(barGroups).attr("fill", d => colorScale(d.key));
     barGroups.exit().remove();
 
     const rects = barGroups.selectAll("rect").data(d => d);
-    rects.enter().append("rect").attr("y", d => yScale(d[0])).attr("height", 0)
+    rects.enter().append("rect")
         .merge(rects)
         .style("cursor", "pointer")
         .on("mouseover",function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Range: ${d.data.range}<br>Total: ${d[1]-d[0]}`);})
@@ -564,28 +593,30 @@ function updateStackedBarChart() {
                 updateAllCharts(filtered);
             }
         })
-        .transition().duration(TRANSITION_DURATION)
         .attr("x", d => xScale(d.data.range)).attr("width", xScale.bandwidth())
         .attr("y", d => yScale(d[1]))
         .attr("height", d => yScale(d[0]) - yScale(d[1]));
     
-    rects.exit().transition().duration(TRANSITION_DURATION).attr("height", 0).remove();
+    rects.exit().remove();
 
-    svg.selectAll(".bars rect").transition().duration(TRANSITION_DURATION).attr("opacity", function(d) {
+    svg.selectAll("rect").attr("opacity", function(d) {
         if (!activeStackedBarFilter) return 0.9;
         const key = d3.select(this.parentNode).datum().key;
         return (activeStackedBarFilter.range === d.data.range && activeStackedBarFilter.experience === key) ? 1 : 0.2;
     });
 }
 
-// --- CUSTOMIZABLE CHART ---
+// --- CUSTOMIZABLE CHART (ADAPTED) ---
 function createCustomizableChart() {
     const numericalColumns = ["workYear", "salaryInUSD", "remoteRatio"];
     const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
 
     const xSelect = d3.select("#x-axis-select");
     const ySelect = d3.select("#y-axis-select");
-    xSelect.html(""); ySelect.html("");
+
+    // Clear previous options before adding new ones
+    xSelect.html("");
+    ySelect.html("");
 
     numericalColumns.forEach(col => {
         xSelect.append("option").attr("value", col).text(columnLabels[col]);
@@ -595,14 +626,13 @@ function createCustomizableChart() {
     xSelect.property("value", "workYear");
     ySelect.property("value", "salaryInUSD");
 
-    xSelect.on("change", () => updateCustomizableChart());
-    ySelect.on("change", () => updateCustomizableChart());
+    xSelect.on("change", () => updateCustomizableChart(true));
+    ySelect.on("change", () => updateCustomizableChart(true));
     
     const containerId = "#customizable-chart";
+    d3.select(containerId).select("svg").remove(); // Remove old svg
     const containerNode = d3.select(containerId).node();
-    if (!containerNode) return;
-    d3.select(containerId).select("svg").remove();
-    
+    if(!containerNode) return;
     const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
     const height = 400 - margin.top - margin.bottom;
 
@@ -620,12 +650,12 @@ function createCustomizableChart() {
     updateCustomizableChart();
 }
 
-function updateCustomizableChart() {
+function updateCustomizableChart(axisChanged = false) {
     const containerId = "#customizable-chart";
     const svg = d3.select(`${containerId} svg g`);
-    if (svg.empty()) return;
-
+    if(svg.empty()) return;
     const activeIds = new Set(activeSelection.map(d => d.id));
+    
     const xVar = d3.select("#x-axis-select").property("value");
     const yVar = d3.select("#y-axis-select").property("value");
     const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
@@ -636,11 +666,13 @@ function updateCustomizableChart() {
     const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
     const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
 
+    // Define tick formats based on variable
     const xTickFormat = xVar === 'workYear' ? d3.format("d") : xVar === 'remoteRatio' ? d => `${d}%` : d => `$${d/1000}K`;
     const yTickFormat = yVar === 'salaryInUSD' ? d => `$${d/1000}K` : yVar === 'remoteRatio' ? d => `${d}%` : d3.format("d");
 
-    svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(TRANSITION_DURATION).call(d3.axisBottom(x).tickFormat(xTickFormat));
-    svg.select(".y-axis").transition().duration(TRANSITION_DURATION).call(d3.axisLeft(y_scale).tickFormat(yTickFormat));
+    svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(500).call(d3.axisBottom(x).tickFormat(xTickFormat));
+    svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y_scale).tickFormat(yTickFormat));
+
     svg.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
     svg.select(".y-label").attr("y", -margin.left + 30).attr("x", -height / 2).text(columnLabels[yVar]);
 
@@ -651,16 +683,14 @@ function updateCustomizableChart() {
         .merge(dots)
         .on("mouseover", (e, d) => showTooltip(e, `<b>${columnLabels[xVar]}:</b> ${d[xVar]}<br><b>${columnLabels[yVar]}:</b> ${d3.format(",.0f")(d[yVar])}<br><b>Level:</b> ${d.experienceLevel}`))
         .on("mouseout", hideTooltip)
-        .transition().duration(TRANSITION_DURATION)
+        .transition().duration(500)
         .attr("cx", d => x(d[xVar]))
         .attr("cy", d => y_scale(d[yVar]))
         .attr("fill", d => colorScale(d.experienceLevel))
         .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 0.8 : 0.05)
         .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 5 : 0);
     
-    dots.exit().transition().duration(TRANSITION_DURATION).attr("r", 0).remove();
+    dots.exit().transition().duration(300).attr("r", 0).remove();
 }
-</script>
 
-</body>
-</html>
+</script>
