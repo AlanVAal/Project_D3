@@ -187,18 +187,50 @@
     // =================================================================================
     // --- CARGA Y PROCESAMIENTO DE DATOS ---
     // =================================================================================
-    document.addEventListener('DOMContentLoaded', () => loadData());
+    const csvFilePath = "./ds_salaries.csv"; 
+
+    document.addEventListener('DOMContentLoaded', () => { loadData(); });
+    
     function loadData() {
         d3.csv(csvFilePath).then(data => {
             processRawData(data);
             initializeDashboard();
         }).catch(error => {
-            console.error("D3 Error loading CSV:", error);
-            showError(`Could not load data from the specified URL.<br>Please check that the URL in the 'csvFilePath' variable is correct and publicly accessible.`);
+            console.error("D3 Error:", error);
+            showError(`Could not load the file from "${csvFilePath}".<br>Please check the file path and name.`);
         });
     }
-    function processRawData(rawData) { const expLevelMap = { 'EN': 'Entry-level', 'MI': 'Mid-level', 'SE': 'Senior-level', 'EX': 'Executive-level' }; processedData = rawData.map((row, i) => { const d = { id: `d-${i}`, workYear: +row.work_year, experienceLevel: expLevelMap[row.experience_level] || row.experience_level, employmentType: row.employment_type, jobTitle: row.job_title, salaryInUSD: +row.salary_in_usd, employeeResidence: row.employee_residence, remoteRatio: +row.remote_ratio, companyLocation: row.company_location, companySize: row.company_size }; return (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) ? null : d; }).filter(d => d !== null && d.salaryInUSD > 0); if (processedData.length === 0) throw new Error("No valid data was processed from the CSV."); activeSelection = [...processedData]; }
     
+    function processRawData(rawData) {
+        // Experience level mapping for better labels
+        const expLevelMap = { 'EN': 'Entry-level', 'MI': 'Mid-level', 'SE': 'Senior-level', 'EX': 'Executive-level' };
+        
+        processedData = rawData.map((row, i) => {
+            const d = {
+                id: `d-${i}`,
+                workYear: +row.work_year,
+                experienceLevel: expLevelMap[row.experience_level] || row.experience_level,
+                employmentType: row.employment_type,
+                jobTitle: row.job_title,
+                salaryInUSD: +row.salary_in_usd,
+                employeeResidence: row.employee_residence,
+                remoteRatio: +row.remote_ratio,
+                companyLocation: row.company_location,
+                companySize: row.company_size
+            };
+            // Basic validation for key numeric fields
+            if (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) {
+                return null;
+            }
+            return d;
+        }).filter(d => d !== null && d.salaryInUSD > 0);
+        
+        if (processedData.length === 0) {
+            throw new Error("No valid data was processed from the CSV.");
+        }
+        
+        activeSelection = [...processedData];
+    }
     // =================================================================================
     // --- INICIALIZACIÓN DEL DASHBOARD Y LÓGICA DE ACTUALIZACIÓN ---
     // =================================================================================
