@@ -7,172 +7,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* --- General Structure and Theme --- */
+        /* --- General Structure and Theme (styles from previous response) --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
-            min-height: 100vh;
-            color: #e0e0e0;
-            padding-bottom: 2rem;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #141e30 0%, #243b55 100%); min-height: 100vh; color: #e0e0e0; padding-bottom: 2rem; }
         .container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
-        .header {
-            background: rgba(255, 255, 255, 0.98);
-            padding: 2rem;
-            text-align: center;
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            border-bottom: 4px solid #4a90e2;
-        }
+        .header { background: rgba(255, 255, 255, 0.98); padding: 2rem; text-align: center; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; border-bottom: 4px solid #4a90e2; }
         .header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
         .authors { font-size: 1.1rem; color: #555; font-style: italic; }
-/* --- Section and Container Styles --- */
-    .section {
-        background: rgba(36, 59, 85, 0.7);
-        margin: 2rem 0;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
-    .chart-container {
-        background: #ffffff;
-        color: #333;
-        border-radius: 10px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        min-height: 500px;
-        height: auto;
-        overflow: visible;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+        .section { background: rgba(36, 59, 85, 0.7); margin: 2rem 0; padding: 2rem; border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .chart-container { background: #ffffff; color: #333; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); min-height: 500px; height: auto; overflow: visible; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+        .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
+        .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
+        .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        .axis { font-size: 12px; }
+        .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
+        .axis .tick text { fill: #333; }
+        .controls { text-align: center; margin-bottom: 1rem; }
+        .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
+        .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
+        .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
+        .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
+        .error-message { color: #ff6b6b; }
+        .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
+        .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
+        .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
+        
+        /* --- NEW: Histogram Controls --- */
+        .histogram-controls { display: flex; justify-content: center; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; padding: 1rem; background: #f0f4f8; border-radius: 8px; }
+        .histogram-controls label { font-weight: 600; color: #333; font-size: 0.9rem; }
+        .histogram-controls input[type="range"] { width: 150px; }
+        .histogram-controls select { padding: 5px 8px; border-radius: 5px; border: 1px solid #ccc; background-color: #fff; }
+        #bin-count-label { font-weight: bold; color: #4a90e2; min-width: 25px; text-align: left; }
+        #histogram-legend { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+        .legend-item { display: flex; align-items: center; font-size: 12px; }
+        .legend-color { width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
 
-    /* --- Chart and Text Styles --- */
-    .chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
-    .chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
-    .tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-    .axis { font-size: 12px; }
-    .axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
-    .axis .tick text { fill: #333; }
-    
-    /* --- Controls and Interactivity --- */
-    .controls { text-align: center; margin-bottom: 1rem; }
-    .reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
-    .reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
-    .brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
-    
-    /* Controls for customizable chart */
-    .custom-chart-controls { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .custom-chart-controls label { font-weight: bold; font-size: 0.9rem; color: #555;}
-    .custom-chart-controls select {
-        padding: 5px 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        background-color: #f9f9f9;
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 0.9rem;
-    }
-
-    /* --- Status Messages and Loading Animation --- */
-    .status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
-    .error-message { color: #ff6b6b; }
-    .loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* --- Summary Table --- */
-    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
-    .summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
-    .summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
-    .summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
-    
-    /* --- Interactive Legend --- */
-    .legend-item { cursor: pointer; }
-    .legend-item.hidden { opacity: 0.5; }
-    
-    /* --- Responsive Adjustments --- */
-    @media (max-width: 992px) {
-        /* Para tabletas y escritorios pequeños */
-        .container {
-            padding: 0 1.5rem;
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .histogram-controls { flex-direction: column; gap: 1rem; }
         }
-        .header h1 {
-            font-size: 2.2rem;
-        }
-        .section-title {
-            font-size: 1.6rem;
-        }
-    }
-
-    @media (max-width: 768px) {
-        /* Para tabletas pequeñas y móviles grandes */
-        .charts-grid {
-            /* Ajusta minmax para permitir columnas individuales más pequeñas */
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        }
-        .custom-chart-controls {
-            flex-direction: column; /* Apila los controles verticalmente */
-            gap: 0.8rem;
-        }
-        .summary-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        }
-    }
-
-    @media (max-width: 480px) {
-        /* Para la mayoría de los teléfonos móviles */
-        body {
-            padding-bottom: 1rem;
-        }
-        .container {
-            padding: 0 1rem; /* Reduce el padding en pantallas pequeñas */
-        }
-        .header {
-            padding: 1.5rem 1rem;
-        }
-        .header h1 {
-            font-size: 1.6rem; /* Reduce aún más para móviles */
-            letter-spacing: 1px;
-        }
-        .authors {
-            font-size: 0.9rem;
-        }
-        .section {
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-        .section-title {
-            font-size: 1.4rem;
-        }
-        .charts-grid {
-            /* Asegura que sea siempre una sola columna en pantallas muy pequeñas */
-            grid-template-columns: 1fr;
-        }
-        .chart-container {
-             min-height: 420px; /* Reduce la altura mínima de los gráficos */
-        }
-        .summary-grid {
-            /* Diseño de dos columnas para el resumen en móviles */
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-        .summary-item .value {
-            font-size: 1.6rem;
-        }
-         .summary-item .label {
-            font-size: 0.8rem;
-        }
-    }
-</style>
+    </style>
 </head>
 <body>
     <div class="header">
         <h1><i class="fas fa-chart-bar"></i> ADVANCED DATA VISUALIZATION PROJECT</h1>
         <div class="authors">Sergio Barrera • Ariel Buenfil • Damaris Dzul • Diego Monroy • Alan Valbuena</div>
     </div>
+
 <div class="container">
     <div id="loading" class="status-message"><div class="loader"></div><p style="margin-top: 1rem;">Loading Data...</p></div>
     <div id="error" class="status-message error-message" style="display: none;"></div>
@@ -185,56 +73,45 @@
         
         <div class="controls"><button id="resetButton" class="reset-btn"><i class="fas fa-sync-alt"></i> Reset Filters</button></div>
 
+        <!-- UPDATED: Advanced Distribution Section with new controls -->
         <div class="section">
-            <h2 class="section-title">Linked Interactive Analysis</h2>
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">Salary vs. Work Year (Interactive Legend)</div>
-                    <p class="chart-description">Analyze salary trends over the years. <b>Interact:</b> Draw a rectangle or click on the legend.</p>
-                    <div id="scatter-experience"></div>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Experience Level Composition by Salary Range</div>
-                    <p class="chart-description">See which experience level predominates in each range. <b>Interact:</b> Click a segment to filter.</p>
-                    <div id="stacked-bar"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h2 class="section-title">Custom Analysis</h2>
+            <h2 class="section-title">Advanced Distribution Analysis</h2>
             <div class="charts-grid" style="grid-template-columns: 1fr;">
-                <div class="chart-container">
-                    <div class="chart-title">Customizable Chart</div>
-                    <p class="chart-description">Select two numerical variables to explore their relationship.</p>
-                    <div class="custom-chart-controls">
-                        <label for="x-axis-select">X-Axis:</label>
-                        <select id="x-axis-select"></select>
-                        <label for="y-axis-select">Y-Axis:</label>
-                        <select id="y-axis-select"></select>
+                 <div class="chart-container">
+                    <div class="chart-title">Interactive and Grouped Salary Distribution</div>
+                    <p class="chart-description">Use the controls to change bins or group by category. <b>Drag</b> on the histogram to filter all other charts.</p>
+                    
+                    <!-- NEW: Histogram Controls -->
+                    <div class="histogram-controls">
+                        <div>
+                            <label for="bin-slider">Número de Bins: </label>
+                            <input type="range" id="bin-slider" min="10" max="100" value="40">
+                            <span id="bin-count-label">40</span>
+                        </div>
+                        <div>
+                            <label for="group-by-select">Agrupar por: </label>
+                            <select id="group-by-select">
+                                <option value="none">Ninguno</option>
+                                <option value="experienceLevel">Nivel de Experiencia</option>
+                                <option value="companySize">Tamaño de Empresa</option>
+                            </select>
+                        </div>
                     </div>
-                    <div id="customizable-chart"></div>
+                    <div id="histogram-legend"></div>
+
+                    <div id="interactive-histogram"></div>
                 </div>
             </div>
-        </div>
-
-        <div class="section">
-            <h2 class="section-title">Distribution and Composition Analysis</h2>
             <div class="charts-grid">
                 <div class="chart-container">
-                    <div class="chart-title">Top 10 Highest Paying Jobs</div>
-                    <p class="chart-description">Identify the most lucrative roles based on average salary.</p>
-                    <div id="top-jobs-chart"></div>
+                    <div class="chart-title">Salary Distribution by Experience Level</div>
+                    <p class="chart-description">Comparison of salary spreads for each experience category. Filtered by the histogram above.</p>
+                    <div id="box-plot"></div>
                 </div>
-                <div class="chart-container">
-                    <div class="chart-title">Distribution by Company Size</div>
-                    <p class="chart-description">Proportion of employees by company size in the dataset.</p>
-                    <div id="company-size-donut"></div>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Distribution by Experience Level</div>
-                    <p class="chart-description">Proportion of employees by experience level.</p>
-                    <div id="experience-donut"></div>
+                 <div class="chart-container">
+                    <div class="chart-title">Job Title Proportions by Average Salary (Treemap)</div>
+                    <p class="chart-description">Area size represents the average salary for the most common job titles. Filtered by the histogram.</p>
+                    <div id="treemap-chart"></div>
                 </div>
             </div>
         </div>
@@ -247,20 +124,16 @@
 // =================================================================================
 // --- GLOBAL VARIABLES AND CONFIGURATION ---
 // =================================================================================
-let processedData = [];
+let originalData = [];
 let activeSelection = [];
 
-const margin = { top: 60, right: 30, bottom: 60, left: 80 }; // Increased left margin for salary labels
+const margin = { top: 60, right: 30, bottom: 60, left: 80 };
 const tooltip = d3.select(".tooltip");
 const colorScale = d3.scaleOrdinal(d3.schemeTableau10);
-let activeStackedBarFilter = null;
-let hiddenGroups = new Set();
 
 // =================================================================================
-// --- DATA LOADING AND PROCESSING (ADAPTED FOR NEW CSV) ---
+// --- DATA LOADING AND PROCESSING ---
 // =================================================================================
-
-// ---!!! IMPORTANT: CHANGE THIS PATH TO YOUR CSV FILE NAME !!!---
 const csvFilePath = "./ds_salaries.csv"; 
 
 document.addEventListener('DOMContentLoaded', () => { loadData(); });
@@ -276,421 +149,366 @@ function loadData() {
 }
 
 function processRawData(rawData) {
-    // Experience level mapping for better labels
     const expLevelMap = { 'EN': 'Entry-level', 'MI': 'Mid-level', 'SE': 'Senior-level', 'EX': 'Executive-level' };
-    
-    processedData = rawData.map((row, i) => {
+    const sizeMap = { 'S': 'Small', 'M': 'Medium', 'L': 'Large' };
+    originalData = rawData.map((row, i) => {
         const d = {
             id: `d-${i}`,
             workYear: +row.work_year,
             experienceLevel: expLevelMap[row.experience_level] || row.experience_level,
-            employmentType: row.employment_type,
             jobTitle: row.job_title,
             salaryInUSD: +row.salary_in_usd,
-            employeeResidence: row.employee_residence,
             remoteRatio: +row.remote_ratio,
-            companyLocation: row.company_location,
-            companySize: row.company_size
+            companySize: sizeMap[row.company_size] || row.company_size
         };
-        // Basic validation for key numeric fields
-        if (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) {
-            return null;
-        }
+        if (isNaN(d.workYear) || isNaN(d.salaryInUSD) || !d.jobTitle) return null;
         return d;
     }).filter(d => d !== null && d.salaryInUSD > 0);
     
-    if (processedData.length === 0) {
-        throw new Error("No valid data was processed from the CSV.");
-    }
-    
-    activeSelection = [...processedData];
+    if (originalData.length === 0) throw new Error("No valid data was processed from the CSV.");
+    activeSelection = [...originalData];
 }
 
 // =================================================================================
 // --- DASHBOARD INITIALIZATION AND UTILITIES ---
 // =================================================================================
-
 function initializeDashboard() {
     d3.select("#loading").style("display", "none");
     d3.select("#content").style("display", "block");
     
+    // Reset button now also resets histogram controls
     d3.select("#resetButton").on("click", () => {
-        const brush = d3.brush();
-        d3.select("#scatter-experience .brush").call(brush.move, null);
-        activeStackedBarFilter = null;
-        hiddenGroups.clear();
-        updateAllCharts(processedData, true);
+        const brush = d3.brushX();
+        d3.select("#interactive-histogram .brush").call(brush.move, null);
+        
+        // Reset controls
+        d3.select("#bin-slider").property("value", 40);
+        d3.select("#bin-count-label").text("40");
+        d3.select("#group-by-select").property("value", "none");
+
+        updateInteractiveHistogram(); // Redraw histogram with default settings
+        updateAllCharts(originalData); // Update other charts
     });
+
+    // Event listeners for new histogram controls
+    d3.select("#bin-slider").on("input", function() {
+        d3.select("#bin-count-label").text(this.value);
+        updateInteractiveHistogram();
+    });
+    d3.select("#group-by-select").on("change", updateInteractiveHistogram);
     
     createAllVisualizations();
-    // Redraw charts on window resize to ensure they fit correctly
-    window.addEventListener('resize', createAllVisualizations);
+    window.addEventListener('resize', () => {
+        createAllVisualizations();
+        // Also update histogram on resize as its dimensions change
+        updateInteractiveHistogram();
+    });
 }
 
 function showError(message) { d3.select("#loading").style("display", "none"); d3.select("#error").style("display", "block").html(`<i class="fas fa-exclamation-triangle"></i> ${message}`); }
 function showTooltip(event, text) { tooltip.style("opacity", .9); tooltip.html(text).style("left", `${event.pageX + 10}px`).style("top", `${event.pageY - 28}px`); }
 function hideTooltip() { tooltip.style("opacity", 0); }
 
-function wrap(text, width) {
-    text.each(function() {
-        var text = d3.select(this),
-            words = text.text().split(/\s+/).reverse(),
-            word,
-            line = [],
-            lineNumber = 0,
-            lineHeight = 1.1, // ems
-            x = text.attr("x"),
-            y = text.attr("y"),
-            dy = parseFloat(text.attr("dy")) || 0,
-            tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
-        while (word = words.pop()) {
-            line.push(word);
-            tspan.text(line.join(" "));
-            if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(" "));
-                line = [word];
-                tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
-            }
-        }
-    });
-}
-
 // =================================================================================
-// --- MAIN CHART LOGIC ---
+// --- CHART UPDATE LOGIC ---
 // =================================================================================
-function updateAllCharts(data, fullReset = false) {
-    activeSelection = fullReset ? [...processedData] : data;
-    
-    // Update linked charts instantly
-    updateScatterExperience();
-    updateStackedBarChart();
-    // Update non-linked charts
-    updateCustomizableChart(); 
+function updateAllCharts(data) {
+    activeSelection = data;
+    // Update all visualizations with the new data selection
+    createSummaryTable(activeSelection);
+    updateBoxPlot();
+    updateTreemap();
 }
 
 function createAllVisualizations() {
-    createSummaryTable(processedData);
-    createDonutChart("#company-size-donut", "companySize", "Company Size");
-    createDonutChart("#experience-donut", "experienceLevel", "Experience Level");
-    createTopJobsChart(processedData);
-    createScatterExperience();
-    createStackedBarChart();
-    createCustomizableChart();
+    createSummaryTable(originalData);
+    createInteractiveHistogram(); // Setup histogram structure
+    createBoxPlot();
+    createTreemap();
 }
 
 // =================================================================================
-// --- VISUALIZATIONS (ADAPTED) ---
+// --- SUMMARY & ORIGINAL VISUALIZATIONS ---
 // =================================================================================
-
 function createSummaryTable(data) {
     d3.select("#data-summary").html("");
     const formatCurrency = d3.format("$,.0f");
     const summaryData = [
-        { label: "Total Records", value: data.length.toLocaleString() },
-        { label: "Average Salary (USD)", value: formatCurrency(d3.mean(data, d => d.salaryInUSD)) },
-        { label: "Median Salary (USD)", value: formatCurrency(d3.median(data, d => d.salaryInUSD)) },
+        { label: "Selected Records", value: data.length.toLocaleString() },
+        { label: "Average Salary (USD)", value: formatCurrency(d3.mean(data, d => d.salaryInUSD) || 0) },
+        { label: "Median Salary (USD)", value: formatCurrency(d3.median(data, d => d.salaryInUSD) || 0) },
         { label: "Unique Job Titles", value: new Set(data.map(d=>d.jobTitle)).size }
     ];
     d3.select("#data-summary").selectAll(".summary-item").data(summaryData).enter().append("div")
         .attr("class", "summary-item").html(d => `<div class="value">${d.value}</div><div class="label">${d.label}</div>`);
 }
 
-function createDonutChart(containerId, groupByKey) {
-    d3.select(containerId).html("");
-    const groupedData = Array.from(d3.group(processedData, d => d[groupByKey]), ([key, value]) => ({key, value: value.length}));
-    colorScale.domain(groupedData.map(d => d.key).sort());
 
-    const containerNode = d3.select(containerId).node();
+// =================================================================================
+// --- NEW: FULLY INTERACTIVE HISTOGRAM ---
+// =================================================================================
+
+function createInteractiveHistogram() {
+    d3.select("#interactive-histogram").html(""); // Clear previous SVG
+    const containerNode = d3.select("#interactive-histogram").node();
     if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width;
-    const height = 400;
-    const radius = Math.min(width, height) / 2.5;
-    const svg = d3.select(containerId).append("svg").attr("width", width).attr("height", height)
-        .append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
-    const pie = d3.pie().value(d => d.value).sort(null);
-    const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
 
-    svg.selectAll("path").data(pie(groupedData)).enter().append("path").attr("d", arc)
-        .attr("fill", d => colorScale(d.data.key)).attr("stroke", "white").style("stroke-width", "2px")
-        .on("mouseover", function(event, d) {
-            d3.select(this).style("transform", "scale(1.05)");
-            const percent = (d.data.value / processedData.length * 100).toFixed(1);
-            showTooltip(event, `<b>${d.data.key}</b><br>${d.data.value.toLocaleString()} (${percent}%)`);
-        })
-        .on("mouseout", function() { d3.select(this).style("transform", "scale(1)"); hideTooltip(); });
-}
+    const histMargin = { top: 10, right: 30, bottom: 50, left: 60 };
+    const width = containerNode.getBoundingClientRect().width - histMargin.left - histMargin.right;
+    const height = 350 - histMargin.top - histMargin.bottom;
 
-function createTopJobsChart(data) {
-    d3.select("#top-jobs-chart").html("");
-    const avgSalaryByJob = Array.from(
-        d3.group(data, d => d.jobTitle), 
-        ([key, value]) => ({ job: key, avgSalary: d3.mean(value, d => d.salaryInUSD) })
-    );
-    const top10Jobs = avgSalaryByJob.sort((a, b) => b.avgSalary - a.avgSalary).slice(0, 10);
-    
-    const job_margin = { top: 20, right: 30, bottom: 40, left: 200 };
-    const containerNode = d3.select("#top-jobs-chart").node();
-    if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width - job_margin.left - job_margin.right;
-    const height = 400 - job_margin.top - job_margin.bottom;
-    
-    const svg = d3.select("#top-jobs-chart").append("svg").attr("width", width + job_margin.left + job_margin.right).attr("height", height + job_margin.top + job_margin.bottom).append("g").attr("transform", `translate(${job_margin.left},${job_margin.top})`);
-    
-    const x = d3.scaleLinear().domain([0, d3.max(top10Jobs, d => d.avgSalary)]).range([0, width]);
-    const y_scale = d3.scaleBand().domain(top10Jobs.map(d => d.job)).range([0, height]).padding(0.1);
-    
-    svg.append("g").call(d3.axisLeft(y_scale))
-       .selectAll(".tick text")
-       .call(wrap, job_margin.left - 15);
-       
-    svg.append("g").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x).ticks(5).tickFormat(d => `$${d/1000}K`));
-    
-    svg.selectAll(".bar").data(top10Jobs).enter().append("rect").attr("class", "bar").attr("y", d => y_scale(d.job)).attr("height", y_scale.bandwidth()).attr("x", 0).attr("width", 0)
-        .attr("fill", "#4a90e2").on("mouseover", (e, d) => showTooltip(e, `<b>${d.job}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.avgSalary)}`)).on("mouseout", hideTooltip)
-        .transition().duration(800).delay((d, i) => i * 50).attr("width", d => x(d.avgSalary));
-}
+    const svg = d3.select("#interactive-histogram").append("svg")
+        .attr("width", width + histMargin.left + histMargin.right)
+        .attr("height", height + histMargin.top + histMargin.bottom)
+      .append("g")
+        .attr("transform", `translate(${histMargin.left},${histMargin.top})`);
 
-// --- INTERACTIVE CHARTS (ADAPTED) ---
-function createScatterExperience(){
-    d3.select("#scatter-experience").html("");
-    const containerNode = d3.select("#scatter-experience").node();
-    if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
-    const svg = d3.select("#scatter-experience").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const x = d3.scaleLinear().domain(d3.extent(processedData, d => d.workYear)).nice().range([0, width]);
-    const y_scale = d3.scaleLinear().domain([0, d3.max(processedData, d => d.salaryInUSD)]).nice().range([height, 0]);
-
-    svg.append("g").attr("class", "x-axis axis").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
-    svg.append("g").attr("class", "y-axis axis").call(d3.axisLeft(y_scale).tickFormat(d => `$${d/1000}K`));
-    svg.append("text").attr("text-anchor", "middle").attr("x", width / 2).attr("y", height + 50).text("Work Year");
-    svg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -margin.left + 30).attr("x", -height / 2).text("Salary (USD)");
-    
-    svg.append("g").attr("class", "dots-container").selectAll("circle").data(processedData, d => d.id)
-        .enter().append("circle").attr("class", "dot")
-        .attr("cx", d => x(d.workYear)).attr("cy", d => y_scale(d.salaryInUSD))
-        .attr("r", 0);
-
-    const legendGroups = [...new Set(processedData.map(d => d.experienceLevel))].sort();
-    colorScale.domain(legendGroups);
-    const legend = svg.append("g").attr("transform", `translate(${width - 120}, -50)`);
-    legendGroups.forEach((group, i) => {
-        const legendItem = legend.append("g").attr("class", "legend-item").attr("transform", `translate(0, ${i * 20})`)
-            .on("click", function() {
-                hiddenGroups.has(group) ? hiddenGroups.delete(group) : hiddenGroups.add(group);
-                updateAllCharts(activeSelection);
-            });
-        legendItem.append("rect").attr("width", 15).attr("height", 15).attr("fill", colorScale(group));
-        legendItem.append("text").attr("x", 20).attr("y", 12).text(group).style("fill", "#333").style("font-size", "12px");
-    });
-
-    const brush = d3.brush().extent([[0, 0], [width, height]]).on("end", event => {
-        if (!event.selection) {
-            if (event.sourceEvent && event.sourceEvent.type !== "end") {
-               updateAllCharts(processedData, true);
-            }
-            return;
-        }
-        const [[x0, y0], [x1, y1]] = event.selection;
-        const brushedData = processedData.filter(d => 
-            x(d.workYear) >= x0 && x(d.workYear) <= x1 &&
-            y_scale(d.salaryInUSD) >= y0 && y_scale(d.salaryInUSD) <= y1
-        );
-        updateAllCharts(brushedData);
-    });
-    svg.append("g").attr("class", "brush").call(brush);
-    updateScatterExperience();
-}
-
-function updateScatterExperience(){
-    const activeIds = new Set(activeSelection.map(d => d.id));
-    d3.select("#scatter-experience").selectAll(".dot")
-        .on("mouseover", (e, d) => showTooltip(e, `Year: ${d.workYear}<br>Salary: $${d.salaryInUSD.toLocaleString()}<br>Level: ${d.experienceLevel}`))
-        .on("mouseout", hideTooltip)
-        .attr("fill", d => colorScale(d.experienceLevel))
-        .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 0.8 : 0.05)
-        .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 5 : 0);
-    
-    d3.select("#scatter-experience").selectAll(".legend-item")
-      .classed("hidden", function() {
-        const group = d3.select(this).text();
-        return hiddenGroups.has(group);
-      });
-}
-
-function createStackedBarChart(){
-    d3.select("#stacked-bar").html("");
-    const containerNode = d3.select("#stacked-bar").node();
-    if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width;
-    const svg = d3.select("#stacked-bar").append("svg").attr("width", width).attr("height", 450)
-        .append("g").attr("transform",`translate(${margin.left},${margin.top})`);
-    svg.append("g").attr("class","x-axis axis");
-    svg.append("g").attr("class","y-axis axis");
-    svg.append("g").attr("class","bars");
-    svg.append("text").attr("class","x-label").attr("text-anchor","middle");
-    svg.append("text").attr("class","y-label").attr("text-anchor","middle").attr("transform","rotate(-90)");
-    updateStackedBarChart();
-}
-
-function updateStackedBarChart(){
-    const containerNode = d3.select("#stacked-bar").node();
-    if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
-    const svg = d3.select("#stacked-bar svg g");
-    
-    const salaryRanges = [{min:0,max:75000,label:"<75K"},{min:75001,max:150000,label:"75-150K"},{min:150001,max:225000,label:"150-225K"},{min:225001,max:Infinity,label:">225K"}];
-    const experienceLevels = [...new Set(processedData.map(d => d.experienceLevel))].sort();
-    
-    const stackedDataInput = salaryRanges.map(range => {
-        const entry = { range: range.label };
-        experienceLevels.forEach(level => {
-            entry[level] = activeSelection.filter(d => d.experienceLevel === level && d.salaryInUSD >= range.min && d.salaryInUSD <= range.max).length;
-        });
-        return entry;
-    });
-
-    const stack = d3.stack().keys(experienceLevels);
-    const series = stack(stackedDataInput);
-    
-    const xScale = d3.scaleBand().domain(salaryRanges.map(d => d.label)).range([0, width]).padding(0.2);
-    const yScale = d3.scaleLinear().domain([0, d3.max(series, d => d3.max(d, item => item[1])) || 10]).nice().range([height, 0]);
-    colorScale.domain(experienceLevels);
-
-    svg.select(".x-axis").attr("transform",`translate(0,${height})`).call(d3.axisBottom(xScale));
-    svg.select(".y-axis").call(d3.axisLeft(yScale));
-    svg.select(".x-label").attr("x",width/2).attr("y",height + 50).text("Salary Range (USD)");
-    svg.select(".y-label").attr("y", -margin.left + 30).attr("x", -height/2).text("Number of Employees");
-
-    const barGroups = svg.select(".bars").selectAll("g").data(series, d => d.key);
-    barGroups.enter().append("g").merge(barGroups).attr("fill", d => colorScale(d.key));
-    barGroups.exit().remove();
-
-    const rects = barGroups.selectAll("rect").data(d => d);
-    rects.enter().append("rect")
-        .merge(rects)
-        .style("cursor", "pointer")
-        .on("mouseover",function(event, d){ const key = d3.select(this.parentNode).datum().key; showTooltip(event, `${key}<br>Range: ${d.data.range}<br>Total: ${d[1]-d[0]}`);})
-        .on("mouseout",hideTooltip)
-        .on("click", function(event, d){
-            event.stopPropagation();
-            const experience = d3.select(this.parentNode).datum().key;
-            const rangeLabel = d.data.range;
-            
-            if(activeStackedBarFilter && activeStackedBarFilter.experience === experience && activeStackedBarFilter.range === rangeLabel){
-                activeStackedBarFilter = null;
-                updateAllCharts(processedData, true);
-            } else {
-                activeStackedBarFilter = { experience, range: rangeLabel };
-                const range = salaryRanges.find(r => r.label === rangeLabel);
-                const filtered = processedData.filter(item => item.experienceLevel === experience && item.salaryInUSD >= range.min && item.salaryInUSD <= range.max);
-                updateAllCharts(filtered);
-            }
-        })
-        .attr("x", d => xScale(d.data.range)).attr("width", xScale.bandwidth())
-        .attr("y", d => yScale(d[1]))
-        .attr("height", d => yScale(d[0]) - yScale(d[1]));
-    
-    rects.exit().remove();
-
-    svg.selectAll("rect").attr("opacity", function(d) {
-        if (!activeStackedBarFilter) return 0.9;
-        const key = d3.select(this.parentNode).datum().key;
-        return (activeStackedBarFilter.range === d.data.range && activeStackedBarFilter.experience === key) ? 1 : 0.2;
-    });
-}
-
-// --- CUSTOMIZABLE CHART (ADAPTED) ---
-function createCustomizableChart() {
-    const numericalColumns = ["workYear", "salaryInUSD", "remoteRatio"];
-    const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
-
-    const xSelect = d3.select("#x-axis-select");
-    const ySelect = d3.select("#y-axis-select");
-
-    // Clear previous options before adding new ones
-    xSelect.html("");
-    ySelect.html("");
-
-    numericalColumns.forEach(col => {
-        xSelect.append("option").attr("value", col).text(columnLabels[col]);
-        ySelect.append("option").attr("value", col).text(columnLabels[col]);
-    });
-    
-    xSelect.property("value", "workYear");
-    ySelect.property("value", "salaryInUSD");
-
-    xSelect.on("change", () => updateCustomizableChart(true));
-    ySelect.on("change", () => updateCustomizableChart(true));
-    
-    const containerId = "#customizable-chart";
-    d3.select(containerId).select("svg").remove(); // Remove old svg
-    const containerNode = d3.select(containerId).node();
-    if(!containerNode) return;
-    const width = containerNode.getBoundingClientRect().width - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
-
-    const svg = d3.select(containerId).append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-    
+    // Add main groups for axes and chart elements
     svg.append("g").attr("class", "x-axis axis");
     svg.append("g").attr("class", "y-axis axis");
-    svg.append("text").attr("class", "x-label axis-label").attr("text-anchor", "middle").style("font-size", "14px");
-    svg.append("text").attr("class", "y-label axis-label").attr("text-anchor", "middle").attr("transform", "rotate(-90)").style("font-size", "14px");
-    svg.append("g").attr("class", "dots-container");
+    svg.append("g").attr("class", "bars-container");
+    svg.append("text").attr("class", "x-label").attr("text-anchor", "middle").attr("x", width/2).attr("y", height + 40).text("Salary in USD");
 
-    updateCustomizableChart();
+    // Add brush
+    const brush = d3.brushX()
+        .extent([[0, 0], [width, height]])
+        .on("end", event => {
+            if (!event.selection) {
+                updateAllCharts(originalData); // If brush is cleared, show all data
+                return;
+            }
+            const x = d3.select("#interactive-histogram").node().__x; // Get scale from node
+            const [x0, x1] = event.selection.map(x.invert);
+            const brushedData = originalData.filter(d => d.salaryInUSD >= x0 && d.salaryInUSD <= x1);
+            updateAllCharts(brushedData);
+        });
+    svg.append("g").attr("class", "brush").call(brush);
+
+    // Initial draw
+    updateInteractiveHistogram();
 }
 
-function updateCustomizableChart(axisChanged = false) {
-    const containerId = "#customizable-chart";
-    const svg = d3.select(`${containerId} svg g`);
-    if(svg.empty()) return;
-    const activeIds = new Set(activeSelection.map(d => d.id));
+function updateInteractiveHistogram() {
+    const containerNode = d3.select("#interactive-histogram").node();
+    if(!containerNode) return;
     
-    const xVar = d3.select("#x-axis-select").property("value");
-    const yVar = d3.select("#y-axis-select").property("value");
-    const columnLabels = { "workYear": "Work Year", "salaryInUSD": "Salary (USD)", "remoteRatio": "Remote Ratio (%)" };
+    const numBins = +d3.select("#bin-slider").property("value");
+    const groupBy = d3.select("#group-by-select").property("value");
 
-    const width = d3.select(`${containerId} svg`).attr("width") - margin.left - margin.right;
-    const height = d3.select(`${containerId} svg`).attr("height") - margin.top - margin.bottom;
+    const histMargin = { top: 10, right: 30, bottom: 50, left: 60 };
+    const svg = d3.select("#interactive-histogram svg g");
+    const width = d3.select("#interactive-histogram svg").attr("width") - histMargin.left - histMargin.right;
+    const height = d3.select("#interactive-histogram svg").attr("height") - histMargin.top - histMargin.bottom;
 
-    const x = d3.scaleLinear().domain(d3.extent(processedData, d => d[xVar])).nice().range([0, width]);
-    const y_scale = d3.scaleLinear().domain(d3.extent(processedData, d => d[yVar])).nice().range([height, 0]);
-
-    // Define tick formats based on variable
-    const xTickFormat = xVar === 'workYear' ? d3.format("d") : xVar === 'remoteRatio' ? d => `${d}%` : d => `$${d/1000}K`;
-    const yTickFormat = yVar === 'salaryInUSD' ? d => `$${d/1000}K` : yVar === 'remoteRatio' ? d => `${d}%` : d3.format("d");
-
-    svg.select(".x-axis").attr("transform", `translate(0,${height})`).transition().duration(500).call(d3.axisBottom(x).tickFormat(xTickFormat));
-    svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y_scale).tickFormat(yTickFormat));
-
-    svg.select(".x-label").attr("x", width / 2).attr("y", height + 50).text(columnLabels[xVar]);
-    svg.select(".y-label").attr("y", -margin.left + 30).attr("x", -height / 2).text(columnLabels[yVar]);
-
-    const dots = svg.select(".dots-container").selectAll("circle").data(processedData, d => d.id);
-    colorScale.domain([...new Set(processedData.map(d => d.experienceLevel))].sort());
-
-    dots.enter().append("circle").attr("class", "dot").attr("r", 0)
-        .merge(dots)
-        .on("mouseover", (e, d) => showTooltip(e, `<b>${columnLabels[xVar]}:</b> ${d[xVar]}<br><b>${columnLabels[yVar]}:</b> ${d3.format(",.0f")(d[yVar])}<br><b>Level:</b> ${d.experienceLevel}`))
-        .on("mouseout", hideTooltip)
+    const x = d3.scaleLinear()
+        .domain(d3.extent(originalData, d => d.salaryInUSD)).nice()
+        .range([0, width]);
+    
+    // Store scale on the node for the brush to access it
+    d3.select("#interactive-histogram").node().__x = x;
+    
+    svg.select(".x-axis")
+        .attr("transform", `translate(0,${height})`)
         .transition().duration(500)
-        .attr("cx", d => x(d[xVar]))
-        .attr("cy", d => y_scale(d[yVar]))
-        .attr("fill", d => colorScale(d.experienceLevel))
-        .attr("opacity", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 0.8 : 0.05)
-        .attr("r", d => activeIds.has(d.id) && !hiddenGroups.has(d.experienceLevel) ? 5 : 0);
+        .call(d3.axisBottom(x).tickFormat(d => `$${d/1000}K`));
+
+    const histogram = d3.histogram()
+        .value(d => d.salaryInUSD)
+        .domain(x.domain())
+        .thresholds(x.ticks(numBins));
+
+    const bins = histogram(originalData);
+
+    // --- GROUPING LOGIC ---
+    let y, subgroups, xSubgroup;
+    if (groupBy === 'none') {
+        y = d3.scaleLinear()
+            .domain([0, d3.max(bins, d => d.length)]).nice()
+            .range([height, 0]);
+    } else {
+        subgroups = [...new Set(originalData.map(d => d[groupBy]))].sort();
+        colorScale.domain(subgroups);
+        xSubgroup = d3.scaleBand()
+            .domain(subgroups)
+            .padding([0.05]);
+
+        // Find the max count within any subgroup in any bin
+        let maxGroupCount = 0;
+        bins.forEach(bin => {
+            const groupCounts = d3.rollup(bin, v => v.length, d => d[groupBy]);
+            const currentMax = d3.max([...groupCounts.values()]);
+            if (currentMax > maxGroupCount) {
+                maxGroupCount = currentMax;
+            }
+        });
+        y = d3.scaleLinear()
+            .domain([0, maxGroupCount]).nice()
+            .range([height, 0]);
+    }
+
+    svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y));
+
+    // --- DRAWING LOGIC ---
+    const binGroups = svg.select(".bars-container").selectAll(".bin-group").data(bins);
+    binGroups.exit().remove();
+    const binGroupsEnter = binGroups.enter().append("g").attr("class", "bin-group");
     
-    dots.exit().transition().duration(300).attr("r", 0).remove();
+    binGroups.merge(binGroupsEnter)
+        .attr("transform", d => `translate(${x(d.x0)}, 0)`);
+
+    // Clear previous rects before drawing new ones
+    binGroups.selectAll("rect").remove();
+    binGroupsEnter.selectAll("rect").remove();
+
+    if (groupBy === 'none') {
+        // --- SIMPLE HISTOGRAM ---
+        binGroups.merge(binGroupsEnter)
+            .append("rect")
+            .attr("x", 1)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("fill", "#4a90e2")
+            .attr("y", height)
+            .attr("height", 0)
+            .on("mouseover", (e, d) => showTooltip(e, `Range: ${d3.format("$,.0f")(d.x0)} - ${d3.format("$,.0f")(d.x1)}<br>Count: ${d.length}`))
+            .on("mouseout", hideTooltip)
+            .transition().duration(750)
+            .attr("y", d => y(d.length))
+            .attr("height", d => height - y(d.length));
+    } else {
+        // --- GROUPED HISTOGRAM ---
+        xSubgroup.range([0, Math.max(0, x(bins[0].x1) - x(bins[0].x0))]);
+        
+        binGroups.merge(binGroupsEnter).each(function(binData) {
+            const groupCounts = d3.rollup(binData, v => v.length, d => d[groupBy]);
+            const groupArray = Array.from(groupCounts, ([key, value]) => ({key, value}));
+            
+            d3.select(this).selectAll("rect")
+                .data(groupArray)
+                .enter()
+                .append("rect")
+                .attr("x", d => xSubgroup(d.key))
+                .attr("width", xSubgroup.bandwidth())
+                .attr("fill", d => colorScale(d.key))
+                .attr("y", height)
+                .attr("height", 0)
+                .on("mouseover", (e, d) => showTooltip(e, `Group: ${d.key}<br>Range: ${d3.format("$,.0f")(binData.x0)} - ${d3.format("$,.0f")(binData.x1)}<br>Count: ${d.value}`))
+                .on("mouseout", hideTooltip)
+                .transition().duration(750)
+                .attr("y", d => y(d.value))
+                .attr("height", d => height - y(d.value));
+        });
+    }
+
+    // --- LEGEND LOGIC ---
+    const legendContainer = d3.select("#histogram-legend");
+    legendContainer.html(""); // Clear previous legend
+    if (groupBy !== 'none' && subgroups) {
+        subgroups.forEach(group => {
+            const legendItem = legendContainer.append("div").attr("class", "legend-item");
+            legendItem.append("div")
+                .attr("class", "legend-color")
+                .style("background-color", colorScale(group));
+            legendItem.append("span").text(group);
+        });
+    }
 }
 
+
+// =================================================================================
+// --- OTHER ADVANCED VISUALIZATIONS (BoxPlot, Treemap) ---
+// Functions from the previous response - they will be correctly filtered by the new histogram
+// =================================================================================
+
+function createBoxPlot() {
+    d3.select("#box-plot").html("");
+    const containerNode = d3.select("#box-plot").node();
+    if(!containerNode) return;
+    const bpMargin = { top: 20, right: 30, bottom: 50, left: 60 };
+    const width = containerNode.getBoundingClientRect().width - bpMargin.left - bpMargin.right;
+    const height = 400 - bpMargin.top - bpMargin.bottom;
+    const svg = d3.select("#box-plot").append("svg").attr("width", width + bpMargin.left + bpMargin.right).attr("height", height + bpMargin.top + bpMargin.bottom).append("g").attr("transform", `translate(${bpMargin.left},${bpMargin.top})`);
+    svg.append("g").attr("class", "x-axis axis");
+    svg.append("g").attr("class", "y-axis axis");
+    svg.append("g").attr("class", "box-plots");
+    updateBoxPlot();
+}
+
+function updateBoxPlot() {
+    const containerNode = d3.select("#box-plot").node();
+    const svg = d3.select("#box-plot svg g");
+    if(!containerNode || !svg.node() || activeSelection.length === 0) {
+        svg.select(".box-plots").html(""); // Clear if no data
+        return;
+    }
+    const bpMargin = { top: 20, right: 30, bottom: 50, left: 60 };
+    const width = containerNode.getBoundingClientRect().width - bpMargin.left - bpMargin.right;
+    const height = 400 - bpMargin.top - bpMargin.bottom;
+
+    const sumstat = d3.group(activeSelection, d => d.experienceLevel);
+    const categories = ['Entry-level', 'Mid-level', 'Senior-level', 'Executive-level'];
+    
+    const y = d3.scaleLinear().domain(d3.extent(activeSelection, d => d.salaryInUSD)).nice().range([height, 0]);
+    svg.select(".y-axis").transition().duration(500).call(d3.axisLeft(y).tickFormat(d => `$${d/1000}K`));
+    const x = d3.scaleBand().range([0, width]).domain(categories).padding(0.75);
+    svg.select(".x-axis").attr("transform", `translate(0, ${height})`).call(d3.axisBottom(x));
+
+    const boxPlots = svg.select(".box-plots").selectAll("g.boxplot").data([...sumstat.entries()], d => d[0]);
+    boxPlots.exit().remove();
+    const boxEnter = boxPlots.enter().append("g").attr("class", "boxplot");
+    boxEnter.append("line").attr("class", "center-line");
+    boxEnter.append("rect").attr("class", "box");
+    boxEnter.append("line").attr("class", "median-line");
+
+    boxEnter.merge(boxPlots).each(function([key, value]) {
+        value.sort((a,b) => a.salaryInUSD - b.salaryInUSD);
+        const q1 = d3.quantile(value, .25, d => d.salaryInUSD);
+        const median = d3.quantile(value, .5, d => d.salaryInUSD);
+        const q3 = d3.quantile(value, .75, d => d.salaryInUSD);
+        const iqr = q3 - q1;
+        const min = q1 - 1.5 * iqr;
+        const max = q3 + 1.5 * iqr;
+        const boxWidth = x.bandwidth();
+        const g = d3.select(this);
+        g.select(".center-line").transition().duration(500).attr("x1", x(key) + boxWidth/2).attr("x2", x(key) + boxWidth/2).attr("y1", y(min)).attr("y2", y(max)).attr("stroke", "#333");
+        g.select(".box").transition().duration(500).attr("x", x(key)).attr("y", y(q3)).attr("width", boxWidth).attr("height", y(q1) - y(q3)).attr("stroke", "black").style("fill", colorScale(key));
+        g.select(".median-line").transition().duration(500).attr("x1", x(key)).attr("x2", x(key) + boxWidth).attr("y1", y(median)).attr("y2", y(median)).attr("stroke", "black").style("stroke-width", "2px");
+    });
+}
+
+function createTreemap() {
+    d3.select("#treemap-chart").html("");
+    const containerNode = d3.select("#treemap-chart").node();
+    if(!containerNode) return;
+    const tmMargin = {top: 10, right: 10, bottom: 10, left: 10};
+    const width = containerNode.getBoundingClientRect().width - tmMargin.left - tmMargin.right;
+    const height = 450 - tmMargin.top - tmMargin.bottom;
+    const svg = d3.select("#treemap-chart").append("svg").attr("width", width + tmMargin.left + tmMargin.right).attr("height", height + tmMargin.top + tmMargin.bottom).append("g").attr("transform", `translate(${tmMargin.left},${tmMargin.top})`);
+    updateTreemap();
+}
+
+function updateTreemap() {
+    const svg = d3.select("#treemap-chart svg g");
+    if(svg.empty()) return;
+    svg.selectAll("*").remove(); // Clear previous content
+    if (activeSelection.length === 0) return;
+    
+    const width = d3.select("#treemap-chart svg").attr("width") - 20;
+    const height = d3.select("#treemap-chart svg").attr("height") - 20;
+
+    const jobCounts = d3.rollup(activeSelection, v => ({ avgSalary: d3.mean(v, d => d.salaryInUSD), count: v.length }), d => d.jobTitle);
+    const topJobsData = Array.from(jobCounts.entries()).sort((a, b) => b[1].count - a[1].count).slice(0, 20).map(([title, data]) => ({ name: title, value: data.avgSalary, count: data.count }));
+    if(topJobsData.length === 0) return;
+
+    const root = d3.hierarchy({ children: topJobsData }).sum(d => d.value);
+    d3.treemap().size([width, height]).padding(4)(root);
+
+    const cell = svg.selectAll("g").data(root.leaves()).enter().append("g").attr("transform", d => `translate(${d.x0},${d.y0})`);
+    cell.append("rect").attr("id", (d,i) => `rect-${i}`).attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0).attr("fill", d => colorScale(d.data.name))
+        .on("mouseover", (e, d) => showTooltip(e, `<b>${d.data.name}</b><br>Avg. Salary: ${d3.format("$,.0f")(d.data.value)}<br>Count: ${d.data.count}`))
+        .on("mouseout", hideTooltip);
+    cell.append("clipPath").attr("id", (d,i) => `clip-${i}`).append("use").attr("xlink:href", (d,i) => `#rect-${i}`);
+    cell.append("text").attr("clip-path", (d,i) => `url(#clip-${i})`).selectAll("tspan").data(d => d.data.name.split(/(?=[A-Z][^A-Z])/g)).join("tspan").attr("x", 4).attr("y", (d, i) => 13 + i * 10).text(d => d).attr("font-size", "12px").attr("fill", "white");
+}
 </script>
+</body>
+</html>
