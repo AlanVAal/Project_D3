@@ -1,0 +1,46 @@
+/* --- General Structure and Theme --- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #141e30 0%, #243b55 100%); min-height: 100vh; color: #e0e0e0; padding-bottom: 2rem; }
+.container { max-width: 1600px; margin: 0 auto; padding: 0 2rem; }
+.header { background: rgba(255, 255, 255, 0.98); padding: 2rem; text-align: center; box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; border-bottom: 4px solid #4a90e2; }
+.header h1 { font-size: 2.5rem; color: #141e30; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
+.authors { font-size: 1.1rem; color: #555; font-style: italic; }
+.section { background: rgba(36, 59, 85, 0.7); margin: 2rem 0; padding: 2rem; border-radius: 15px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); }
+.section-title { font-size: 1.8rem; color: #ffffff; margin-bottom: 1.5rem; text-align: center; border-bottom: 3px solid #4a90e2; padding-bottom: 0.5rem; }
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 2rem; margin-top: 2rem; }
+.chart-container { background: #ffffff; color: #333; border-radius: 10px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); min-height: 500px; height: auto; overflow: visible; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15); }
+.chart-title { font-size: 1.2rem; color: #2c3e50; margin-bottom: 0.5rem; text-align: center; font-weight: 600; }
+.chart-description { font-size: 0.9rem; color: #555; text-align: center; margin-bottom: 1rem; max-width: 90%; margin-left: auto; margin-right: auto; }
+.tooltip { position: absolute; background: rgba(0, 0, 0, 0.85); color: white; padding: 8px 12px; border-radius: 5px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.axis { font-size: 12px; }
+.axis path, .axis line { fill: none; stroke: #666; shape-rendering: crispEdges; }
+.axis .tick text { fill: #333; }
+.controls { text-align: center; margin-bottom: 1rem; }
+.reset-btn { background: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4); }
+.reset-btn:hover { background: #c0392b; transform: translateY(-2px); }
+.brush .selection { fill: #4a90e2; fill-opacity: 0.3; stroke: #4a90e2; }
+.status-message { text-align: center; padding: 4rem; font-size: 1.5rem; }
+.error-message { color: #ff6b6b; }
+.loader { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top-color: #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; text-align: center; }
+.summary-item { background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1); }
+.summary-item .value { font-size: 2rem; font-weight: bold; color: #4a90e2; }
+.summary-item .label { font-size: 0.9rem; color: #ccc; margin-top: 0.5rem; }
+
+/* --- Histogram Controls --- */
+.histogram-controls { display: flex; justify-content: center; align-items: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; padding: 1rem; background: #f0f4f8; border-radius: 8px; }
+.histogram-controls label { font-weight: 600; color: #333; font-size: 0.9rem; }
+.histogram-controls input[type="range"] { width: 150px; }
+.histogram-controls select { padding: 5px 8px; border-radius: 5px; border: 1px solid #ccc; background-color: #fff; }
+#bin-count-label { font-weight: bold; color: #4a90e2; min-width: 25px; text-align: left; }
+#histogram-legend { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 10px; }
+.legend-item { display: flex; align-items: center; font-size: 12px; }
+.legend-color { width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .histogram-controls { flex-direction: column; gap: 1rem; }
+}
